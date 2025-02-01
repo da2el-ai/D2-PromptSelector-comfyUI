@@ -1,0 +1,14 @@
+[project]
+name = "d2-promptselector-comfyui"
+description = ""
+version = "0.1.0"
+license = { file = "LICENSE" }
+
+[project.urls]
+Repository = "https://github.com/da2el-ai/D2-PromptSelector-comfyUI"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = "da2el"
+DisplayName = "D2-PromptSelector-comfyUI"
+Icon = ""

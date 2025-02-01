@@ -1,0 +1,25 @@
+.d2ps-tag-field{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: .5em;
+    min-width: min(320px, 100%);
+    max-width: 100%;
+    height: fit-content;
+    padding: 8px;
+    border: solid 1px var(--block-border-color, #374151);
+    border-radius: var(--block-radius, 8px);
+    flex: 1 1 calc(50% - 20px);
+
+    // トップ階層
+    &.d2ps-tag-field--top{
+        height: 100%;
+        overflow: auto;
+    }
+
+    /* ランダムボタンも格納する枠 */
+    &.d2ps-tag-field--with-random {
+        flex-direction: column;
+    }
+
+}

@@ -1,0 +1,19 @@
+.d2ps-button{
+    
+
+    &.d2ps-button--tag{
+    
+    }
+    &.d2ps-button--random{
+        --p-button-primary-background: #244f7a;
+        --p-button-primary-border-color: #48729b;
+        --p-button-primary-color: #fff;
+        flex: none;
+        width: 100%;    
+    }
+    &.d2ps-button--none{
+        --p-button-primary-background: #000;
+        --p-button-primary-border-color: #333;
+        pointer-events: none;
+    }
+}
