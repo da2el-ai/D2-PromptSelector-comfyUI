@@ -1,6 +1,6 @@
 [project]
 name = "d2-promptselector-comfyui"
-description = ""
+description = "This is a version of [a/sd-d2-prompt-selector](https://github.com/da2el-ai/sd-d2-prompt-selector) reworked for ComfyUI. It's just a prototype that I've put together for now. The random syntax of sd-d2-prompt-selector cannot be used; instead, the DynamicPrompt syntax is used"
 version = "0.1.0"
 license = { file = "LICENSE" }
 
