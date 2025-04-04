@@ -26,13 +26,13 @@ class D2PS_PromptSelectorUnit {
     categories: D2PS_Category[];
     tabNavi: D2PS_TabNavi | undefined;
     onClick: TTagButtonClick;
-    // onRightClick: TTagButtonClick;
+    onRightClick: TTagButtonClick;
 
     /**
      * コンストラクタ
      */
-    // constructor(onClick: TTagButtonClick, onRightClick: TTagButtonClick) {
-    constructor(onClick: TTagButtonClick) {
+    constructor(onClick: TTagButtonClick, onRightClick: TTagButtonClick) {
+    // constructor(onClick: TTagButtonClick) {
         // ここで初期化しないとエラーになるのでとりあえず作っておく
         this.container = document.createElement("div");
         this.tagWrapper = document.createElement("div");
@@ -41,7 +41,7 @@ class D2PS_PromptSelectorUnit {
         this.tags = {};
         this.categories = [];
         this.onClick = onClick;
-        // this.onRightClick = onRightClick;
+        this.onRightClick = onRightClick;
     }
 
     /**
@@ -160,7 +160,7 @@ class D2PS_PromptSelectorUnit {
     private $_renderCategory(parentContainer: HTMLElement) {
         Object.keys(this.tags).forEach((categoryId: string) => {
             const category = new D2PS_Category(
-                categoryId, this.onClick
+                categoryId, this.onClick, this.onRightClick
             );
             const categoryContainer = category.createCategory((this.tags as TTagsDict)[categoryId]);
             parentContainer.appendChild(categoryContainer);
@@ -169,7 +169,7 @@ class D2PS_PromptSelectorUnit {
 
         // 検索を作る
         const searchCategory = new D2PS_Category(
-            '🔍', this.onClick
+            '🔍', this.onClick, this.onRightClick
         );
         const categoryContainer = searchCategory.createSearch();
         parentContainer.appendChild(categoryContainer);

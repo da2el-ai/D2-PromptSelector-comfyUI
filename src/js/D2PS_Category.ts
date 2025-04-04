@@ -7,15 +7,16 @@ import { Constants } from './Constants';
 ///////////////////
 class D2PS_Category {
     onClick: TTagButtonClick;
-    // onRightClick: TTagButtonClick;
+    onRightClick: TTagButtonClick;
     categoryId: string = '';
     container: HTMLElement;
 
-    // constructor(categoryId: string, onClick: TTagButtonClick, onRightClick: TTagButtonClick) {
-    constructor(categoryId: string, onClick: TTagButtonClick) {
+    constructor(categoryId: string, onClick: TTagButtonClick, onRightClick: TTagButtonClick) {
+    // constructor(categoryId: string, onClick: TTagButtonClick) {
+
         this.categoryId = categoryId;
         this.onClick = onClick;
-        // this.onRightClick = onRightClick;
+        this.onRightClick = onRightClick;
         this.container = D2PS_ElementBuilder.tagField();
         this.container.classList.add(Constants.CSS_CLASS_TAG_FIELD_TOP);
         this.container.style.display = 'none';
@@ -146,15 +147,16 @@ class D2PS_Category {
         color = 'primary',
         tooltip?: string,
     ): HTMLButtonElement {
+
         const param: TElementParams = {
             onClick: (e: MouseEvent) => {
                 e.preventDefault();
                 this.onClick(value, e.metaKey || e.ctrlKey);
             },
-            // onRightClick: (e: MouseEvent) => {
-            //     e.preventDefault();
-            //     this.onRightClick(value, e.metaKey || e.ctrlKey);
-            // },
+            onRightClick: (e: MouseEvent) => {
+                e.preventDefault();
+                this.onRightClick(value, e.metaKey || e.ctrlKey);
+            },
             onMouseEnter: () => {
                 D2PS_ToolTip.showTip(tooltip || value);
             },

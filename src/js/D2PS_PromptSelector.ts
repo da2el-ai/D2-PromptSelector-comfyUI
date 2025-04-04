@@ -15,7 +15,7 @@ class D2PS_PromptSelector {
      * コンストラクタ
      */
     constructor() {
-        this.psUnit = new D2PS_PromptSelectorUnit(this.onTagClick.bind(this));
+        this.psUnit = new D2PS_PromptSelectorUnit(this.onTagClick.bind(this), this.onTagRightClick.bind(this));
         this.tags = {};
         this.targetTextArea = undefined;
 
@@ -75,8 +75,10 @@ class D2PS_PromptSelector {
      * @param tag 
      * @param toNegative 
      */
-    // onTagClick(tag: string, toNegative: boolean = false) {
-    onTagClick(tag: string) {
+    onTagClick(tag: string, onCtrlKey: boolean = false) {
+    // onTagClick(tag: string) {
+        console.log("////// click", onCtrlKey);
+
         if(!this.targetTextArea) return;
 
         const tag2 = `${tag} `;
@@ -97,14 +99,18 @@ class D2PS_PromptSelector {
         const newPosition = startPos + tag2.length;
         this.targetTextArea.setSelectionRange(newPosition, newPosition);
         
+        // ctrl 押していたら閉じる
+        if(onCtrlKey){
+            this.changeVisible();
+        }
+
         // フォーカスを維持
         this.targetTextArea.focus();
 
     }
-    // onTagRightClick(tag: string, toNegative: boolean = false) {
-    //     // this.$_addTag(tag, toNegative);
-    //     // console.log("aaa right click", tag, toNegative);
-    // }
+    onTagRightClick(tag: string, _onCtrlKey: boolean = false) {
+        this.onTagClick(tag, true);
+    }
 
 
 }

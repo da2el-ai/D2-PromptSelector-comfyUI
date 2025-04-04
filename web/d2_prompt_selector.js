@@ -420,14 +420,14 @@ const _D2PS_Search = class _D2PS_Search {
 __publicField(_D2PS_Search, "convedTags", { ___: [] });
 let D2PS_Search = _D2PS_Search;
 class D2PS_Category {
-  // constructor(categoryId: string, onClick: TTagButtonClick, onRightClick: TTagButtonClick) {
-  constructor(categoryId, onClick) {
+  constructor(categoryId, onClick, onRightClick) {
     __publicField(this, "onClick");
-    // onRightClick: TTagButtonClick;
+    __publicField(this, "onRightClick");
     __publicField(this, "categoryId", "");
     __publicField(this, "container");
     this.categoryId = categoryId;
     this.onClick = onClick;
+    this.onRightClick = onRightClick;
     this.container = D2PS_ElementBuilder.tagField();
     this.container.classList.add(Constants.CSS_CLASS_TAG_FIELD_TOP);
     this.container.style.display = "none";
@@ -522,10 +522,10 @@ class D2PS_Category {
         e.preventDefault();
         this.onClick(value, e.metaKey || e.ctrlKey);
       },
-      // onRightClick: (e: MouseEvent) => {
-      //     e.preventDefault();
-      //     this.onRightClick(value, e.metaKey || e.ctrlKey);
-      // },
+      onRightClick: (e) => {
+        e.preventDefault();
+        this.onRightClick(value, e.metaKey || e.ctrlKey);
+      },
       onMouseEnter: () => {
         D2PS_ToolTip.showTip(tooltip || value);
       },
@@ -542,12 +542,10 @@ class D2PS_Category {
   }
 }
 class D2PS_PromptSelectorUnit {
-  // onRightClick: TTagButtonClick;
   /**
    * コンストラクタ
    */
-  // constructor(onClick: TTagButtonClick, onRightClick: TTagButtonClick) {
-  constructor(onClick) {
+  constructor(onClick, onRightClick) {
     // type: string;
     __publicField(this, "container");
     __publicField(this, "tagWrapper");
@@ -558,6 +556,7 @@ class D2PS_PromptSelectorUnit {
     __publicField(this, "categories");
     __publicField(this, "tabNavi");
     __publicField(this, "onClick");
+    __publicField(this, "onRightClick");
     this.container = document.createElement("div");
     this.tagWrapper = document.createElement("div");
     this.visible = false;
@@ -565,6 +564,7 @@ class D2PS_PromptSelectorUnit {
     this.tags = {};
     this.categories = [];
     this.onClick = onClick;
+    this.onRightClick = onRightClick;
   }
   /**
    * 閉じるボタンなど基本コントローラー作成
@@ -653,7 +653,8 @@ class D2PS_PromptSelectorUnit {
     Object.keys(this.tags).forEach((categoryId) => {
       const category = new D2PS_Category(
         categoryId,
-        this.onClick
+        this.onClick,
+        this.onRightClick
       );
       const categoryContainer2 = category.createCategory(this.tags[categoryId]);
       parentContainer.appendChild(categoryContainer2);
@@ -661,7 +662,8 @@ class D2PS_PromptSelectorUnit {
     });
     const searchCategory = new D2PS_Category(
       "🔍",
-      this.onClick
+      this.onClick,
+      this.onRightClick
     );
     const categoryContainer = searchCategory.createSearch();
     parentContainer.appendChild(categoryContainer);
@@ -677,7 +679,7 @@ class D2PS_PromptSelector {
     __publicField(this, "config");
     __publicField(this, "psUnit");
     __publicField(this, "targetTextArea");
-    this.psUnit = new D2PS_PromptSelectorUnit(this.onTagClick.bind(this));
+    this.psUnit = new D2PS_PromptSelectorUnit(this.onTagClick.bind(this), this.onTagRightClick.bind(this));
     this.tags = {};
     this.targetTextArea = void 0;
     document.addEventListener("focus", (e) => {
@@ -725,8 +727,8 @@ class D2PS_PromptSelector {
    * @param tag 
    * @param toNegative 
    */
-  // onTagClick(tag: string, toNegative: boolean = false) {
-  onTagClick(tag) {
+  onTagClick(tag, onCtrlKey = false) {
+    console.log("////// click", onCtrlKey);
     if (!this.targetTextArea) return;
     const tag2 = `${tag} `;
     const startPos = this.targetTextArea.selectionStart;
@@ -737,12 +739,14 @@ class D2PS_PromptSelector {
     this.targetTextArea.value = beforeText + tag2 + afterText;
     const newPosition = startPos + tag2.length;
     this.targetTextArea.setSelectionRange(newPosition, newPosition);
+    if (onCtrlKey) {
+      this.changeVisible();
+    }
     this.targetTextArea.focus();
   }
-  // onTagRightClick(tag: string, toNegative: boolean = false) {
-  //     // this.$_addTag(tag, toNegative);
-  //     // console.log("aaa right click", tag, toNegative);
-  // }
+  onTagRightClick(tag, _onCtrlKey = false) {
+    this.onTagClick(tag, true);
+  }
 }
 const D2_PS_CSS_FILEPATH = "/D2_prompt-selector/assets/style.css";
 loadCssFile(D2_PS_CSS_FILEPATH);
