@@ -30,8 +30,8 @@ Returns:
         - copied_files: コピーされたファイルのリスト（成功時のみ）
 """
 def copy_if_empty(src: Union[str, Path], dist: Union[str, Path]):
-    print("//////// copy_if_empty")
-    print(src, dist)
+    # print("//////// copy_if_empty")
+    # print(src, dist)
     # Pathオブジェクトに変換
     dist = Path(dist)
     src = Path(src)
@@ -45,7 +45,7 @@ def copy_if_empty(src: Union[str, Path], dist: Union[str, Path]):
     if files_in_a:
         return
     
-    print("//////// コピーする")
+    # print("//////// コピーする")
 
     # フォルダBの内容をコピー
     for item in src.glob('**/*'):
