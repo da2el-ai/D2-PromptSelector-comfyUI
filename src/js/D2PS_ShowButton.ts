@@ -72,7 +72,7 @@ class D2PS_ShowButton {
      */
     _createButton(clickFunc:()=>void): HTMLButtonElement {
         const button = document.createElement("button");
-        button.classList.add(Constants.CSS_CLASS_BUTTON, Constants.CSS_CLASS_SHOW_BUTTON);
+        button.className = `${Constants.CSS_CLASS_BUTTON} ${Constants.CSS_CLASS_SHOW_BUTTON}`;
         button.textContent = "PS";
         button.addEventListener("click", function () {
             clickFunc();

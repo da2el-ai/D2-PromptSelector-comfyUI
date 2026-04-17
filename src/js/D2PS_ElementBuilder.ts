@@ -31,7 +31,7 @@ class D2PS_ElementBuilder {
             size: '',
             color: '',
         });
-        button.classList.add(Constants.CSS_CLASS_BUTTON_BASE, 'd2ps-button--open');
+        button.className = `${Constants.CSS_CLASS_BUTTON_BASE} d2ps-button--open`;
         button.addEventListener('click', onClick);
         return button;
     }
@@ -129,7 +129,7 @@ class D2PS_ElementBuilder {
         }: TElementParams,
     ): HTMLButtonElement {
         const button = D2PS_ElementBuilder.baseButton(title, { color });
-        button.classList.add(Constants.CSS_CLASS_BUTTON_BASE, Constants.CSS_CLASS_TAG_BUTTON);
+        button.className = `${Constants.CSS_CLASS_BUTTON_BASE} ${Constants.CSS_CLASS_TAG_BUTTON}`;
         button.addEventListener('click', onClick);
         button.addEventListener('contextmenu', onRightClick);
         button.addEventListener('mouseenter', onMouseEnter);
@@ -151,7 +151,7 @@ class D2PS_ElementBuilder {
         }: TElementParams,
     ): HTMLButtonElement {
         const button = D2PS_ElementBuilder.baseButton(title, { color });
-        button.classList.add(Constants.CSS_CLASS_BUTTON_BASE, Constants.CSS_CLASS_RANDOM_BUTTON);
+        button.className = `${Constants.CSS_CLASS_BUTTON_BASE} ${Constants.CSS_CLASS_RANDOM_BUTTON}`;
         button.addEventListener('click', onClick);
         button.addEventListener('contextmenu', onRightClick);
         button.addEventListener('mouseenter', onMouseEnter);
@@ -176,14 +176,6 @@ class D2PS_ElementBuilder {
         const container = document.createElement('div');
         container.classList.add(Constants.CSS_CLASS_SEARCH);
         container.appendChild(input);
-
-        // const button = D2PS_ElementBuilder.baseButton(`${Constants.ICON_SEARCH}検索`, {
-        //     size: '',
-        //     color: '',
-        // });
-        // button.classList.add(Constants.CSS_CLASS_BUTTON_BASE);
-        // button.addEventListener('click', onClick);
-        // container.appendChild(button);
 
         return container;
     }

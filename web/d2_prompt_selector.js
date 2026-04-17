@@ -8,40 +8,41 @@ const loadCssFile = (filePath) => {
   link.href = filePath;
   document.head.appendChild(link);
 };
-class Constants {
-}
-__publicField(Constants, "CSS_CLASS_BUTTON", "p-button");
+const _Constants = class _Constants {
+};
+__publicField(_Constants, "CSS_CLASS_BUTTON", "inline-flex items-center justify-center cursor-pointer touch-manipulation appearance-none border-none text-sm font-inter transition-colors bg-primary-background text-base-foreground hover:bg-primary-background-hover h-8 rounded-lg px-4 font-light");
 // PromptSelect表示ボタン
-__publicField(Constants, "CSS_CLASS_SHOW_BUTTON", "d2ps-show-button");
+__publicField(_Constants, "CSS_CLASS_SHOW_BUTTON", "d2ps-show-button");
 ///////////////////////////
 // 全体
-__publicField(Constants, "CSS_CLASS_TOP_CONTAINER", "d2ps");
+__publicField(_Constants, "CSS_CLASS_TOP_CONTAINER", "d2ps");
 // コントローラーコンテナ
-__publicField(Constants, "CSS_CLASS_CONTROL_CONTAINER", "d2ps__controller");
+__publicField(_Constants, "CSS_CLASS_CONTROL_CONTAINER", "d2ps__controller");
 // タグコンテナ
-__publicField(Constants, "CSS_CLASS_TAG_WRAPPER", "d2ps__tag-wrapper");
-__publicField(Constants, "CSS_CLASS_TAG_CONTAINER", "d2ps__tag-container");
+__publicField(_Constants, "CSS_CLASS_TAG_WRAPPER", "d2ps__tag-wrapper");
+__publicField(_Constants, "CSS_CLASS_TAG_CONTAINER", "d2ps__tag-container");
 // タグボタンコンテナ
-__publicField(Constants, "CSS_CLASS_TAG_FIELD", "d2ps-tag-field");
-__publicField(Constants, "CSS_CLASS_TAG_FIELD_TOP", "d2ps-tag-field--top");
-__publicField(Constants, "CSS_CLASS_TAG_FIELD_RANDOM", "d2ps-tag-field--with-random");
+__publicField(_Constants, "CSS_CLASS_TAG_FIELD", "d2ps-tag-field");
+__publicField(_Constants, "CSS_CLASS_TAG_FIELD_TOP", "d2ps-tag-field--top");
+__publicField(_Constants, "CSS_CLASS_TAG_FIELD_RANDOM", "d2ps-tag-field--with-random");
 ///////////////////////////
-__publicField(Constants, "CSS_CLASS_BUTTON_BASE", "d2ps-button");
-__publicField(Constants, "CSS_CLASS_TAG_BUTTON", "d2ps-button--tag");
-__publicField(Constants, "CSS_CLASS_RANDOM_BUTTON", "d2ps-button--random");
+__publicField(_Constants, "CSS_CLASS_BUTTON_BASE", _Constants.CSS_CLASS_BUTTON);
+__publicField(_Constants, "CSS_CLASS_TAG_BUTTON", "d2ps-button--tag");
+__publicField(_Constants, "CSS_CLASS_RANDOM_BUTTON", "d2ps-button--random");
 ///////////////////////////
 // 検索
-__publicField(Constants, "CSS_CLASS_SEARCH", "d2ps-search");
-__publicField(Constants, "CSS_CLASS_SEARCH_INPUT", "d2ps-search__input");
-__publicField(Constants, "ICON_SEARCH", "🔍");
+__publicField(_Constants, "CSS_CLASS_SEARCH", "d2ps-search");
+__publicField(_Constants, "CSS_CLASS_SEARCH_INPUT", "d2ps-search__input");
+__publicField(_Constants, "ICON_SEARCH", "🔍");
 ///////////////////////////
 // タブ
-__publicField(Constants, "CSS_CLASS_TAB", "d2ps-tab");
-__publicField(Constants, "CSS_CLASS_TAB_BUTTON", "d2ps-tab__button");
+__publicField(_Constants, "CSS_CLASS_TAB", "d2ps-tab");
+__publicField(_Constants, "CSS_CLASS_TAB_BUTTON", "d2ps-tab__button");
 ///////////////////////////
 // ツールチップ
-__publicField(Constants, "CSS_CLASS_TOOLTIP_CONTAINER", "d2ps-tooltip-container");
-__publicField(Constants, "API_GET_TAGS", "/D2_prompt-selector/get_tags");
+__publicField(_Constants, "CSS_CLASS_TOOLTIP_CONTAINER", "d2ps-tooltip-container");
+__publicField(_Constants, "API_GET_TAGS", "/D2_prompt-selector/get_tags");
+let Constants = _Constants;
 const _D2PS_ShowButton = class _D2PS_ShowButton {
   constructor(app2, clickFunc) {
     __publicField(this, "button");
@@ -82,7 +83,7 @@ const _D2PS_ShowButton = class _D2PS_ShowButton {
   _createButton(clickFunc) {
     var _a;
     const button = document.createElement("button");
-    button.classList.add(Constants.CSS_CLASS_BUTTON, Constants.CSS_CLASS_SHOW_BUTTON);
+    button.className = `${Constants.CSS_CLASS_BUTTON} ${Constants.CSS_CLASS_SHOW_BUTTON}`;
     button.textContent = "PS";
     button.addEventListener("click", function() {
       clickFunc();
@@ -121,7 +122,7 @@ class D2PS_ElementBuilder {
       size: "",
       color: ""
     });
-    button.classList.add(Constants.CSS_CLASS_BUTTON_BASE, "d2ps-button--open");
+    button.className = `${Constants.CSS_CLASS_BUTTON_BASE} d2ps-button--open`;
     button.addEventListener("click", onClick);
     return button;
   }
@@ -211,7 +212,7 @@ class D2PS_ElementBuilder {
     color = ""
   }) {
     const button = D2PS_ElementBuilder.baseButton(title, { color });
-    button.classList.add(Constants.CSS_CLASS_BUTTON_BASE, Constants.CSS_CLASS_TAG_BUTTON);
+    button.className = `${Constants.CSS_CLASS_BUTTON_BASE} ${Constants.CSS_CLASS_TAG_BUTTON}`;
     button.addEventListener("click", onClick);
     button.addEventListener("contextmenu", onRightClick);
     button.addEventListener("mouseenter", onMouseEnter);
@@ -233,7 +234,7 @@ class D2PS_ElementBuilder {
     color = "primary"
   }) {
     const button = D2PS_ElementBuilder.baseButton(title, { color });
-    button.classList.add(Constants.CSS_CLASS_BUTTON_BASE, Constants.CSS_CLASS_RANDOM_BUTTON);
+    button.className = `${Constants.CSS_CLASS_BUTTON_BASE} ${Constants.CSS_CLASS_RANDOM_BUTTON}`;
     button.addEventListener("click", onClick);
     button.addEventListener("contextmenu", onRightClick);
     button.addEventListener("mouseenter", onMouseEnter);
@@ -728,6 +729,7 @@ class D2PS_PromptSelector {
    * @param toNegative 
    */
   onTagClick(tag, onCtrlKey = false) {
+    var _a;
     console.log("////// click", onCtrlKey);
     if (!this.targetTextArea) return;
     const tag2 = `${tag} `;
@@ -736,7 +738,12 @@ class D2PS_PromptSelector {
     const currentValue = this.targetTextArea.value;
     const beforeText = currentValue.substring(0, startPos);
     const afterText = currentValue.substring(endPos);
-    this.targetTextArea.value = beforeText + tag2 + afterText;
+    const nativeSetter = (_a = Object.getOwnPropertyDescriptor(
+      HTMLTextAreaElement.prototype,
+      "value"
+    )) == null ? void 0 : _a.set;
+    nativeSetter == null ? void 0 : nativeSetter.call(this.targetTextArea, beforeText + tag2 + afterText);
+    this.targetTextArea.dispatchEvent(new Event("input", { bubbles: true }));
     const newPosition = startPos + tag2.length;
     this.targetTextArea.setSelectionRange(newPosition, newPosition);
     if (onCtrlKey) {

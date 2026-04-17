@@ -3,7 +3,7 @@
  */
 
 class Constants{
-    static CSS_CLASS_BUTTON = 'p-button';
+    static CSS_CLASS_BUTTON = 'inline-flex items-center justify-center cursor-pointer touch-manipulation appearance-none border-none text-sm font-inter transition-colors bg-primary-background text-base-foreground hover:bg-primary-background-hover h-8 rounded-lg px-4 font-light';
     // PromptSelect表示ボタン
     static CSS_CLASS_SHOW_BUTTON = 'd2ps-show-button';
     ///////////////////////////
@@ -19,7 +19,7 @@ class Constants{
     static CSS_CLASS_TAG_FIELD_TOP = 'd2ps-tag-field--top';
     static CSS_CLASS_TAG_FIELD_RANDOM = 'd2ps-tag-field--with-random';
     ///////////////////////////
-    static CSS_CLASS_BUTTON_BASE = 'd2ps-button';
+    static CSS_CLASS_BUTTON_BASE = Constants.CSS_CLASS_BUTTON;
     static CSS_CLASS_TAG_BUTTON = 'd2ps-button--tag';
     static CSS_CLASS_RANDOM_BUTTON = 'd2ps-button--random';
     ///////////////////////////

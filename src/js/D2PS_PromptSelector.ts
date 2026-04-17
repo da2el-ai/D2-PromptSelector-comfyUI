@@ -93,8 +93,16 @@ class D2PS_PromptSelector {
         const afterText = currentValue.substring(endPos);
         
         // テキストを結合
-        this.targetTextArea.value = beforeText + tag2 + afterText;
         
+        // ネイティブのセッターで値をセット（Vueを回避しない書き方）
+        const nativeSetter = Object.getOwnPropertyDescriptor(
+            HTMLTextAreaElement.prototype, "value"
+        )?.set;
+        nativeSetter?.call(this.targetTextArea, beforeText + tag2 + afterText);
+
+        // inputイベントを発火させてVueのリアクティブシステムに通知
+        this.targetTextArea.dispatchEvent(new Event("input", { bubbles: true }));
+
         // カーソル位置を追加したテキストの後ろに移動
         const newPosition = startPos + tag2.length;
         this.targetTextArea.setSelectionRange(newPosition, newPosition);
