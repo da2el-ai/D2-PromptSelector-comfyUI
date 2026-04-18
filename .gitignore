@@ -1,5 +1,5 @@
 ﻿__pycache__
 config/sizeselector_config.yaml
 node_modules
-tags
+tags/
 yarn.lock
