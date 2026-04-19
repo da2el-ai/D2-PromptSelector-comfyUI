@@ -128,6 +128,12 @@ function listen(node, event, handler, options) {
   node.addEventListener(event, handler, options);
   return () => node.removeEventListener(event, handler, options);
 }
+function prevent_default(fn) {
+  return function(event) {
+    event.preventDefault();
+    return fn.call(this, event);
+  };
+}
 function attr(node, attribute, value) {
   if (value == null) node.removeAttribute(attribute);
   else if (node.getAttribute(attribute) !== value) node.setAttribute(attribute, value);
@@ -897,12 +903,17 @@ class TagButton extends SvelteComponent {
 }
 function get_each_context$2(ctx, list, i) {
   const child_ctx = ctx.slice();
-  child_ctx[4] = list[i];
+  child_ctx[6] = list[i];
+  const constants_0 = getRandomPrompt(
+    /*category*/
+    child_ctx[6].items
+  );
+  child_ctx[7] = constants_0;
   return child_ctx;
 }
 function get_each_context_1(ctx, list, i) {
   const child_ctx = ctx.slice();
-  child_ctx[7] = list[i];
+  child_ctx[10] = list[i];
   return child_ctx;
 }
 function create_each_block_1(key_1, ctx) {
@@ -913,11 +924,11 @@ function create_each_block_1(key_1, ctx) {
     props: {
       name: (
         /*item*/
-        ctx[7].name
+        ctx[10].name
       ),
       prompt: (
         /*item*/
-        ctx[7].prompt
+        ctx[10].prompt
       ),
       onClickTag: (
         /*onClickTag*/
@@ -943,10 +954,10 @@ function create_each_block_1(key_1, ctx) {
       const tagbutton_changes = {};
       if (dirty & /*file*/
       1) tagbutton_changes.name = /*item*/
-      ctx[7].name;
+      ctx[10].name;
       if (dirty & /*file*/
       1) tagbutton_changes.prompt = /*item*/
-      ctx[7].prompt;
+      ctx[10].prompt;
       if (dirty & /*onClickTag*/
       2) tagbutton_changes.onClickTag = /*onClickTag*/
       ctx[1];
@@ -970,18 +981,49 @@ function create_each_block_1(key_1, ctx) {
   };
 }
 function create_each_block$2(key_1, ctx) {
-  let first;
+  let div1;
+  let button;
+  let t0_value = (
+    /*category*/
+    ctx[6].categoryId + ""
+  );
+  let t0;
+  let button_class_value;
+  let t1;
+  let div0;
   let each_blocks = [];
   let each_1_lookup = /* @__PURE__ */ new Map();
-  let each_1_anchor;
+  let t2;
   let current;
+  let mounted;
+  let dispose;
+  function click_handler(...args) {
+    return (
+      /*click_handler*/
+      ctx[4](
+        /*randomPrompt*/
+        ctx[7],
+        ...args
+      )
+    );
+  }
+  function contextmenu_handler(...args) {
+    return (
+      /*contextmenu_handler*/
+      ctx[5](
+        /*randomPrompt*/
+        ctx[7],
+        ...args
+      )
+    );
+  }
   let each_value_1 = ensure_array_like(
     /*category*/
-    ctx[4].items
+    ctx[6].items
   );
   const get_key = (ctx2) => (
     /*item*/
-    ctx2[7].name
+    ctx2[10].name
   );
   for (let i = 0; i < each_value_1.length; i += 1) {
     let child_ctx = get_each_context_1(ctx, each_value_1, i);
@@ -992,33 +1034,60 @@ function create_each_block$2(key_1, ctx) {
     key: key_1,
     first: null,
     c() {
-      first = empty();
+      div1 = element("div");
+      button = element("button");
+      t0 = text(t0_value);
+      t1 = space();
+      div0 = element("div");
       for (let i = 0; i < each_blocks.length; i += 1) {
         each_blocks[i].c();
       }
-      each_1_anchor = empty();
-      this.first = first;
+      t2 = space();
+      attr(button, "class", button_class_value = "p-button " + Constants.CSS_CLASS_RANDOM_BUTTON + /*randomPrompt*/
+      (ctx[7] ? "" : " d2ps-button--none"));
+      attr(div0, "class", "d2ps-tag-field");
+      attr(div1, "class", "d2ps-tag-field " + Constants.CSS_CLASS_TAG_FIELD_RANDOM);
+      this.first = div1;
     },
     m(target, anchor) {
-      insert(target, first, anchor);
+      insert(target, div1, anchor);
+      append(div1, button);
+      append(button, t0);
+      append(div1, t1);
+      append(div1, div0);
       for (let i = 0; i < each_blocks.length; i += 1) {
         if (each_blocks[i]) {
-          each_blocks[i].m(target, anchor);
+          each_blocks[i].m(div0, null);
         }
       }
-      insert(target, each_1_anchor, anchor);
+      append(div1, t2);
       current = true;
+      if (!mounted) {
+        dispose = [
+          listen(button, "click", click_handler),
+          listen(button, "contextmenu", prevent_default(contextmenu_handler))
+        ];
+        mounted = true;
+      }
     },
     p(new_ctx, dirty) {
       ctx = new_ctx;
+      if ((!current || dirty & /*file*/
+      1) && t0_value !== (t0_value = /*category*/
+      ctx[6].categoryId + "")) set_data(t0, t0_value);
+      if (!current || dirty & /*file*/
+      1 && button_class_value !== (button_class_value = "p-button " + Constants.CSS_CLASS_RANDOM_BUTTON + /*randomPrompt*/
+      (ctx[7] ? "" : " d2ps-button--none"))) {
+        attr(button, "class", button_class_value);
+      }
       if (dirty & /*file, onClickTag*/
       3) {
         each_value_1 = ensure_array_like(
           /*category*/
-          ctx[4].items
+          ctx[6].items
         );
         group_outros();
-        each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value_1, each_1_lookup, each_1_anchor.parentNode, outro_and_destroy_block, create_each_block_1, each_1_anchor, get_each_context_1);
+        each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value_1, each_1_lookup, div0, outro_and_destroy_block, create_each_block_1, null, get_each_context_1);
         check_outros();
       }
     },
@@ -1037,12 +1106,13 @@ function create_each_block$2(key_1, ctx) {
     },
     d(detaching) {
       if (detaching) {
-        detach(first);
-        detach(each_1_anchor);
+        detach(div1);
       }
       for (let i = 0; i < each_blocks.length; i += 1) {
-        each_blocks[i].d(detaching);
+        each_blocks[i].d();
       }
+      mounted = false;
+      run_all(dispose);
     }
   };
 }
@@ -1057,7 +1127,7 @@ function create_fragment$4(ctx) {
   );
   const get_key = (ctx2) => (
     /*category*/
-    ctx2[4].categoryId
+    ctx2[6].categoryId
   );
   for (let i = 0; i < each_value.length; i += 1) {
     let child_ctx = get_each_context$2(ctx, each_value, i);
@@ -1070,7 +1140,7 @@ function create_fragment$4(ctx) {
       for (let i = 0; i < each_blocks.length; i += 1) {
         each_blocks[i].c();
       }
-      attr(div, "class", "d2ps-tag-field d2ps-tag-field--top");
+      attr(div, "class", "d2ps-tag-field " + Constants.CSS_CLASS_TAG_FIELD_TOP);
       set_style(
         div,
         "display",
@@ -1088,7 +1158,7 @@ function create_fragment$4(ctx) {
       current = true;
     },
     p(ctx2, [dirty]) {
-      if (dirty & /*file, onClickTag*/
+      if (dirty & /*file, onClickTag, getRandomPrompt*/
       3) {
         each_value = ensure_array_like(
           /*file*/
@@ -1131,12 +1201,18 @@ function create_fragment$4(ctx) {
     }
   };
 }
+function getRandomPrompt(items) {
+  const parts = items.map((item) => `${item.prompt},`);
+  return parts.length > 0 ? `{ ${parts.join(" | ")} }` : "";
+}
 function instance$4($$self, $$props, $$invalidate) {
   let isActive;
   let $activeTabId;
   component_subscribe($$self, activeTabId, ($$value) => $$invalidate(3, $activeTabId = $$value));
   let { file } = $$props;
   let { onClickTag } = $$props;
+  const click_handler = (randomPrompt, e) => randomPrompt && onClickTag(randomPrompt, e.ctrlKey || e.metaKey);
+  const contextmenu_handler = (randomPrompt, e) => randomPrompt && onClickTag(randomPrompt, true);
   $$self.$$set = ($$props2) => {
     if ("file" in $$props2) $$invalidate(0, file = $$props2.file);
     if ("onClickTag" in $$props2) $$invalidate(1, onClickTag = $$props2.onClickTag);
@@ -1147,7 +1223,7 @@ function instance$4($$self, $$props, $$invalidate) {
       $$invalidate(2, isActive = $activeTabId === file.fileId);
     }
   };
-  return [file, onClickTag, isActive, $activeTabId];
+  return [file, onClickTag, isActive, $activeTabId, click_handler, contextmenu_handler];
 }
 class CategoryView extends SvelteComponent {
   constructor(options) {
