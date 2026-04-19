@@ -1,7 +1,10 @@
 declare var app: any;
 
 import { loadCssFile } from './utils';
-import { targetTextArea } from './stores/ui';
+import { targetTextArea, isPanelVisible } from './stores/ui';
+import { fetchTags } from './stores/tags';
+import PromptSelector from './lib/PromptSelector.svelte';
+import ShowButton from './lib/ShowButton.svelte';
 
 const D2_PS_CSS_FILEPATH = '/D2_prompt-selector/assets/style.css';
 loadCssFile(D2_PS_CSS_FILEPATH);
@@ -17,5 +20,24 @@ document.addEventListener(
   true
 );
 
-// TODO: Phase4 で PromptSelector コンポーネントのマウント処理を実装
-console.log('[D2 PromptSelector] loaded (Svelte build)');
+// PromptSelector をマウント
+const selectorContainer = document.createElement('div');
+document.body.appendChild(selectorContainer);
+new PromptSelector({ target: selectorContainer });
+
+// ShowButton をマウント
+const showButtonContainer = document.createElement('div');
+document.body.appendChild(showButtonContainer);
+const showButtonInstance = new ShowButton({
+  target: showButtonContainer,
+  props: {
+    app,
+    onToggle: () => {
+      isPanelVisible.update((v) => !v);
+      fetchTags();
+    },
+  },
+});
+
+// ComfyUI Settings 登録
+(showButtonInstance as any).setup?.();

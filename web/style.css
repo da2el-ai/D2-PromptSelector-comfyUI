@@ -68,11 +68,13 @@
   border: solid 1px var(--block-border-color, #374151);
   border-radius: var(--block-radius, 8px);
   flex: 1 1 calc(50% - 20px);
-  /* ランダムボタンも格納する枠 */
 }
 .d2ps-tag-field.d2ps-tag-field--top {
   height: 100%;
   overflow: auto;
+}
+.d2ps-tag-field {
+  /* ランダムボタンも格納する枠 */
 }
 .d2ps-tag-field.d2ps-tag-field--with-random {
   flex-direction: column;

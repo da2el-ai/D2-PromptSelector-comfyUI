@@ -11,3 +11,6 @@ export const isEditMode = writable<boolean>(false);
 
 // 最後にフォーカスされた textarea
 export const targetTextArea = writable<HTMLTextAreaElement | null>(null);
+
+// ツールチップに表示するプロンプト文字列
+export const tooltip = writable<string>('');
