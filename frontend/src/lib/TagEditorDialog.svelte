@@ -24,6 +24,10 @@
     let origCategoryId = '';
     let origName = '';
 
+    // ファイルの新規入力切替
+    let isNewFile = false;
+    let newFileName = '';
+
     // カテゴリの新規入力切替
     let isNewCategory = false;
     let newCategoryName = '';
@@ -37,8 +41,14 @@
     $: selectedFile = files.find((f) => f.fileId === fileId);
     $: categories = selectedFile ? selectedFile.categories.map((c) => c.categoryId) : [];
 
-    // ---- 重複チェック ----
+    // 新規ファイル時はカテゴリも必ず新規（既存カテゴリが存在しないため）
+    $: if (isNewFile && !isNewCategory) {
+        isNewCategory = true;
+    }
+
+    // ---- 重複チェック（既存ファイル選択時のみ意味がある） ----
     $: isDuplicate = (() => {
+        if (isNewFile) return false;
         if (!name.trim()) return false;
         const targetCategory = isNewCategory ? newCategoryName : categoryId;
         const targetFile = files.find((f) => f.fileId === fileId);
@@ -48,6 +58,7 @@
             // 編集時は自分自身を除外
             if (
                 mode === 'edit' &&
+                !isNewFile &&
                 fileId === origFileId &&
                 targetCategory === origCategoryId &&
                 item.name === origName
@@ -59,10 +70,11 @@
     })();
 
     $: effectiveCategoryId = isNewCategory ? newCategoryName.trim() : categoryId;
+    $: effectiveFileId = isNewFile ? newFileName.trim() : fileId;
     $: canSave =
         name.trim() !== '' &&
         prompt.trim() !== '' &&
-        fileId !== '' &&
+        effectiveFileId !== '' &&
         effectiveCategoryId !== '' &&
         !isDuplicate &&
         !saving;
@@ -78,6 +90,8 @@
         origFileId = '';
         origCategoryId = '';
         origName = '';
+        isNewFile = false;
+        newFileName = '';
         isNewCategory = false;
         newCategoryName = '';
         errorMsg = '';
@@ -94,6 +108,8 @@
         origFileId = fId;
         origCategoryId = catId;
         origName = itemName;
+        isNewFile = false;
+        newFileName = '';
         isNewCategory = false;
         newCategoryName = '';
         errorMsg = '';
@@ -117,7 +133,8 @@
         try {
             if (mode === 'add') {
                 await apiPost('/add_item', {
-                    file: fileId,
+                    file: isNewFile ? '__new__' : fileId,
+                    new_file: isNewFile ? newFileName.trim() : null,
                     category: isNewCategory ? '__new__' : categoryId,
                     new_category: isNewCategory ? newCategoryName.trim() : null,
                     name: name.trim(),
@@ -130,7 +147,8 @@
                     name: origName,
                     new_name: name.trim(),
                     new_prompt: prompt.trim(),
-                    new_file: fileId,
+                    new_file: isNewFile ? '__new__' : fileId,
+                    new_file_name: isNewFile ? newFileName.trim() : null,
                     new_category: isNewCategory ? '__new__' : effectiveCategoryId,
                     new_category_name: isNewCategory ? newCategoryName.trim() : null,
                 });
@@ -157,11 +175,35 @@
         <!-- ファイル（タブ） -->
         <label class="d2ps-dialog__label">
             <span>タブ（ファイル）</span>
-            <select class="d2ps-dialog__select" bind:value={fileId} on:change={handleFileChange}>
-                {#each files as f (f.fileId)}
-                    <option value={f.fileId}>{f.fileId}</option>
-                {/each}
-            </select>
+            <div class="d2ps-dialog__row">
+                {#if !isNewFile}
+                    <select class="d2ps-dialog__select" bind:value={fileId} on:change={handleFileChange}>
+                        {#each files as f (f.fileId)}
+                            <option value={f.fileId}>{f.fileId}</option>
+                        {/each}
+                    </select>
+                    <button
+                        class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_PRIMARY} d2ps-dialog__new-btn"
+                        on:click={() => {
+                            isNewFile = true;
+                            newFileName = '';
+                        }}>+ 新規</button
+                    >
+                {:else}
+                    <input
+                        class="d2ps-dialog__input"
+                        type="text"
+                        placeholder="新しいファイル名"
+                        bind:value={newFileName}
+                    />
+                    <button
+                        class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_PRIMARY} d2ps-dialog__new-btn"
+                        on:click={() => {
+                            isNewFile = false;
+                        }}>既存</button
+                    >
+                {/if}
+            </div>
         </label>
 
         <!-- カテゴリ -->
@@ -188,12 +230,14 @@
                         placeholder="新しいカテゴリ名"
                         bind:value={newCategoryName}
                     />
-                    <button
-                        class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_PRIMARY} d2ps-dialog__new-btn"
-                        on:click={() => {
-                            isNewCategory = false;
-                        }}>既存</button
-                    >
+                    {#if !isNewFile}
+                        <button
+                            class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_PRIMARY} d2ps-dialog__new-btn"
+                            on:click={() => {
+                                isNewCategory = false;
+                            }}>既存</button
+                        >
+                    {/if}
                 {/if}
             </div>
         </label>

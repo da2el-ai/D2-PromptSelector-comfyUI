@@ -12,6 +12,10 @@
     let fileId = '';
     let categoryName = '';
 
+    // ファイルの新規入力切替
+    let isNewFile = false;
+    let newFileName = '';
+
     // 編集前の値
     let origFileId = '';
     let origCategoryName = '';
@@ -24,6 +28,7 @@
 
     // ---- 重複チェック（移動先 / リネーム先に同名カテゴリが既存か） ----
     $: isDuplicate = (() => {
+        if (isNewFile) return false;
         const trimmed = categoryName.trim();
         if (!trimmed) return false;
         if (fileId === origFileId && trimmed === origCategoryName) return false;
@@ -32,9 +37,10 @@
         return targetFile.categories.some((c) => c.categoryId === trimmed);
     })();
 
+    $: effectiveFileId = isNewFile ? newFileName.trim() : fileId;
     $: canSave =
         categoryName.trim() !== '' &&
-        fileId !== '' &&
+        effectiveFileId !== '' &&
         !isDuplicate &&
         !saving;
 
@@ -44,6 +50,8 @@
         categoryName = catId;
         origFileId = fId;
         origCategoryName = catId;
+        isNewFile = false;
+        newFileName = '';
         errorMsg = '';
         saving = false;
         dialog.showModal();
@@ -58,7 +66,8 @@
             await apiPost('/edit_category', {
                 file: origFileId,
                 category: origCategoryName,
-                new_file: fileId,
+                new_file: isNewFile ? '__new__' : fileId,
+                new_file_name: isNewFile ? newFileName.trim() : null,
                 new_category: categoryName.trim(),
             });
             await fetchTags();
@@ -83,11 +92,35 @@
         <!-- ファイル（タブ） -->
         <label class="d2ps-dialog__label">
             <span>タブ（ファイル）</span>
-            <select class="d2ps-dialog__select" bind:value={fileId}>
-                {#each files as f (f.fileId)}
-                    <option value={f.fileId}>{f.fileId}</option>
-                {/each}
-            </select>
+            <div class="d2ps-dialog__row">
+                {#if !isNewFile}
+                    <select class="d2ps-dialog__select" bind:value={fileId}>
+                        {#each files as f (f.fileId)}
+                            <option value={f.fileId}>{f.fileId}</option>
+                        {/each}
+                    </select>
+                    <button
+                        class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_PRIMARY} d2ps-dialog__new-btn"
+                        on:click={() => {
+                            isNewFile = true;
+                            newFileName = '';
+                        }}>+ 新規</button
+                    >
+                {:else}
+                    <input
+                        class="d2ps-dialog__input"
+                        type="text"
+                        placeholder="新しいファイル名"
+                        bind:value={newFileName}
+                    />
+                    <button
+                        class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_PRIMARY} d2ps-dialog__new-btn"
+                        on:click={() => {
+                            isNewFile = false;
+                        }}>既存</button
+                    >
+                {/if}
+            </div>
         </label>
 
         <!-- カテゴリ名 -->

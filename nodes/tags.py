@@ -54,6 +54,7 @@ async def route_d2_ps_add_item(request):
             new_category=body.get("new_category"),
             name=body["name"],
             prompt=body["prompt"],
+            new_file=body.get("new_file"),
         )
         return web.json_response(result)
     except Exception as e:
@@ -75,6 +76,7 @@ async def route_d2_ps_edit_item(request):
             new_prompt=body["new_prompt"],
             new_file=body.get("new_file"),
             new_category=body.get("new_category"),
+            new_file_name=body.get("new_file_name"),
         )
         return web.json_response(result)
     except Exception as e:
@@ -93,6 +95,7 @@ async def route_d2_ps_edit_category(request):
             category=body["category"],
             new_file=body["new_file"],
             new_category=body["new_category"],
+            new_file_name=body.get("new_file_name"),
         )
         return web.json_response(result)
     except Exception as e:
@@ -256,6 +259,40 @@ class TagsUtil:
         )
 
     @classmethod
+    def _create_new_file(cls, file_stem: str) -> dict:
+        """
+        新しい YAML ファイルを作成し、__config__.yml の sort 末尾に追加する。
+        既存ファイルがあれば作成は skip するが、sort への追加は行う。
+        - file_stem に不正文字を含む場合や予約名の場合は {"error": "invalid_file_name"} を返す
+        - 成功時は {"ok": True} を返す
+        """
+        stem = file_stem.strip()
+        if not stem or stem == "__config__":
+            return {"error": "invalid_file_name"}
+        # パス区切り文字や危険な文字を拒否
+        if any(ch in stem for ch in ('/', '\\', ':', '*', '?', '"', '<', '>', '|')):
+            return {"error": "invalid_file_name"}
+
+        filepath = cls.TAGS_DIR / f"{stem}.yml"
+        if not filepath.exists():
+            filepath.write_text("", encoding="utf-8")
+
+        config_path = cls.TAGS_DIR / "__config__.yml"
+        if config_path.exists():
+            config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+        else:
+            config = {}
+        sort_list = config.get("sort") or []
+        if stem not in sort_list:
+            sort_list.append(stem)
+            config["sort"] = sort_list
+            config_path.write_text(
+                yaml.dump(config, allow_unicode=True, sort_keys=False),
+                encoding="utf-8",
+            )
+        return {"ok": True}
+
+    @classmethod
     def _rename_key_in_place(cls, d: dict, old_key: str, new_key: str, new_value) -> None:
         """
         dict 内の old_key を new_key に変更しつつ、その位置に new_value を配置する。
@@ -276,13 +313,21 @@ class TagsUtil:
 
     @classmethod
     def add_item(cls, file: str, category: str, new_category: str | None,
-                 name: str, prompt: str) -> dict:
+                 name: str, prompt: str, new_file: str | None = None) -> dict:
         """
         タグを1件追加する。
+        - file == "__new__" のとき new_file を実際のファイル名として使い、必要なら新規作成
         - category == "__new__" のとき new_category を実際のカテゴリ名として使う
         - 同一カテゴリ内に同名アイテムが存在する場合は {"error": "duplicate"} を返す
         - 成功時は {"success": True} を返す
         """
+        # 新規ファイル
+        if file == "__new__":
+            result = cls._create_new_file(new_file or "")
+            if "error" in result:
+                return result
+            file = (new_file or "").strip()
+
         data = cls._load_file(file)
         if cls._needs_migration(data):
             return {"error": "migration_needed"}
@@ -302,16 +347,27 @@ class TagsUtil:
     @classmethod
     def edit_item(cls, file: str, category: str, name: str,
                   new_name: str, new_prompt: str,
-                  new_file: str | None, new_category: str | None) -> dict:
+                  new_file: str | None, new_category: str | None,
+                  new_file_name: str | None = None) -> dict:
         """
         タグを1件編集する。
         - new_file / new_category が元と異なる場合は移動扱い
+        - new_file == "__new__" のとき new_file_name を実際のファイル名として使い、必要なら新規作成
         - 移動先 or 同カテゴリ内で new_name が既存（かつ元の name と異なる）場合は {"error": "duplicate"}
         - 成功時は {"success": True} を返す
         """
         src_file = file
-        dst_file = new_file if new_file else file
-        dst_cat  = new_category if new_category else category
+
+        # 新規ファイルへ移動
+        if new_file == "__new__":
+            result = cls._create_new_file(new_file_name or "")
+            if "error" in result:
+                return result
+            dst_file = (new_file_name or "").strip()
+        else:
+            dst_file = new_file if new_file else file
+
+        dst_cat = new_category if new_category else category
 
         src_data = cls._load_file(src_file)
         if cls._needs_migration(src_data):
@@ -356,14 +412,23 @@ class TagsUtil:
 
     @classmethod
     def edit_category(cls, file: str, category: str,
-                      new_file: str, new_category: str) -> dict:
+                      new_file: str, new_category: str,
+                      new_file_name: str | None = None) -> dict:
         """
         カテゴリを編集（リネーム または ファイル間移動）。
         - new_file が file と異なる場合：カテゴリごと（含むタグも一緒に）移動
+        - new_file == "__new__" のとき new_file_name を実際のファイル名として使い、必要なら新規作成
         - new_file == file かつ new_category == category：何も変更せず success
         - 移動先 / リネーム先に同名カテゴリが既存（かつ元と異なる）の場合は {"error": "duplicate"}
         - 元カテゴリが存在しない場合は {"error": "not_found"}
         """
+        # 新規ファイルへ移動
+        if new_file == "__new__":
+            result = cls._create_new_file(new_file_name or "")
+            if "error" in result:
+                return result
+            new_file = (new_file_name or "").strip()
+
         src_data = cls._load_file(file)
         if cls._needs_migration(src_data):
             return {"error": "migration_needed"}
