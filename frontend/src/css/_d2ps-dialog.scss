@@ -1,0 +1,86 @@
+dialog.d2ps-dialog-root {
+    min-width: 360px;
+    padding: 0;
+    background: var(--p-dialog-background, #2a2a2a);
+    border: 1px solid var(--p-dialog-border-color);
+    border-radius: 8px;
+    color: var(--p-dialog-color, #fff);
+    box-shadow: none;
+
+    &::backdrop {
+        background: var(--p-mask-background);
+    }
+
+
+
+    .d2ps-dialog {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+
+        &.d2ps-dialog--editor {
+            width: 600px;
+        }
+    }
+
+    .d2ps-dialog__title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .d2ps-dialog__message {
+        margin: 0;
+        line-height: 1.6;
+        font-size: 0.9rem;
+    }
+
+    .d2ps-dialog__label {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.85rem;
+    }
+
+    .d2ps-dialog__select,
+    .d2ps-dialog__input {
+        background-color: var(--p-inputtext-background, #090909);
+        color: var(--p-inputtext-color, #fff);
+        border: 1px solid var(--p-inputtext-border-color, #666);
+        border-radius: 4px;
+        padding: 0.5rem 0.75rem;
+        font-size: 1rem;
+        flex: 1;
+    }
+
+    .d2ps-dialog__row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .d2ps-dialog__new-btn {
+        // flex-shrink: 0;
+        // padding: 2px 8px;
+        // font-size: 0.8rem;
+    }
+
+    .d2ps-dialog__buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin-top: 4px;
+    }
+
+    .d2ps-dialog__error {
+        margin: 0;
+        color: #f88;
+        font-size: 0.85rem;
+    }
+
+    button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+}

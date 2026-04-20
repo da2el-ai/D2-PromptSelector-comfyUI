@@ -1,19 +1,41 @@
-.d2ps-button{
-    
+.d2ps-btn-wrapper {
+    display: inline-flex;
+    // gap: 4px;
+}
 
-    &.d2ps-button--tag{
-    
+.d2ps-btn {
+
+    // カテゴリ名ボタン
+    &.d2ps-btn--random {
+        width: 100%;
     }
-    &.d2ps-button--random{
-        --p-button-primary-background: #244f7a;
-        --p-button-primary-border-color: #48729b;
-        --p-button-primary-color: #fff;
-        flex: none;
-        width: 100%;    
+
+    // 削除ボタン。カテゴリ、タグボタンの左隣に出現
+    &.d2ps-btn--delete {
+        display: flex;
+        align-self: center;
+        align-items: center;
+        justify-content: center;
+        width: 2em;
+        aspect-ratio: 1/1;
+        border-radius: 50%;
+        background-color: transparent;
+        border: none;
+
+        &:hover {
+            background-color: var(--secondary-background-hover);
+        }
     }
-    &.d2ps-button--none{
-        --p-button-primary-background: #000;
-        --p-button-primary-border-color: #333;
-        pointer-events: none;
-    }
+
+
+    // &.d2ps-btn--inner-text{
+    //     flex: 1;
+    //     border: none;
+    //     background-color: transparent;
+    // }
+    // &.d2ps-btn--inner-text-hover{
+    //     flex: 1;
+    //     border: none;
+    //     background-color: transparent;
+    // }
 }

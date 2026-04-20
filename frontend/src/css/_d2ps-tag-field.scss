@@ -1,4 +1,4 @@
-.d2ps-tag-field{
+.d2ps-tag-field {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -6,20 +6,24 @@
     min-width: min(320px, 100%);
     max-width: 100%;
     height: fit-content;
+    min-height: 2rem;
     padding: 8px;
-    border: solid 1px var(--block-border-color, #374151);
+    border: solid 1px var(--p-tieredmenu-separator-border-color);
     border-radius: var(--block-radius, 8px);
     flex: 1 1 calc(50% - 20px);
 
     // トップ階層
-    &.d2ps-tag-field--top{
+    &.d2ps-tag-field--top {
         height: 100%;
         overflow: auto;
+        padding: 0;
+        border: none;
     }
 
     /* ランダムボタンも格納する枠 */
     &.d2ps-tag-field--with-random {
         flex-direction: column;
+        flex-wrap: nowrap;
     }
 
 }

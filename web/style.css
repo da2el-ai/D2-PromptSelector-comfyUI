@@ -10,23 +10,25 @@
   grid-template-rows: auto 1fr auto;
   gap: 10px;
   padding: 10px;
-  background: rgba(0, 0, 0, 0.768627451);
+  background-color: var(--comfy-menu-bg);
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.4);
 }
 
-.d2ps__controller {
+.d2ps-controller {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
 
-.d2ps__tag-wrapper {
+.d2ps-tag-wrapper {
   height: 100%;
   overflow: hidden;
   padding: 10px;
 }
 
-.d2ps__tag-container {
+.d2ps-tag-container {
   display: grid;
+  gap: 10px;
   height: 100%;
   overflow: hidden;
 }
@@ -39,21 +41,30 @@
 .d2ps-tooltip-container {
   height: 2em;
   padding: 0.5em;
-  background-color: #1a3a53;
+  background-color: var(--p-inputtext-background);
   border-radius: 4px;
 }
 
-.d2ps-button.d2ps-button--random {
-  --p-button-primary-background: #244f7a;
-  --p-button-primary-border-color: #48729b;
-  --p-button-primary-color: #fff;
-  flex: none;
+.d2ps-btn-wrapper {
+  display: inline-flex;
+}
+
+.d2ps-btn.d2ps-btn--random {
   width: 100%;
 }
-.d2ps-button.d2ps-button--none {
-  --p-button-primary-background: #000;
-  --p-button-primary-border-color: #333;
-  pointer-events: none;
+.d2ps-btn.d2ps-btn--delete {
+  display: flex;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  width: 2em;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  background-color: transparent;
+  border: none;
+}
+.d2ps-btn.d2ps-btn--delete:hover {
+  background-color: var(--secondary-background-hover);
 }
 
 .d2ps-tag-field {
@@ -64,20 +75,24 @@
   min-width: min(320px, 100%);
   max-width: 100%;
   height: fit-content;
+  min-height: 2rem;
   padding: 8px;
-  border: solid 1px var(--block-border-color, #374151);
+  border: solid 1px var(--p-tieredmenu-separator-border-color);
   border-radius: var(--block-radius, 8px);
   flex: 1 1 calc(50% - 20px);
 }
 .d2ps-tag-field.d2ps-tag-field--top {
   height: 100%;
   overflow: auto;
+  padding: 0;
+  border: none;
 }
 .d2ps-tag-field {
   /* ランダムボタンも格納する枠 */
 }
 .d2ps-tag-field.d2ps-tag-field--with-random {
   flex-direction: column;
+  flex-wrap: nowrap;
 }
 
 .d2ps-tab {
@@ -86,22 +101,96 @@
 }
 
 .d2ps-tab__button {
-  --p-button-primary-background: #244f7a;
-  --p-button-primary-border-color: #48729b;
-  --p-button-primary-color: #fff;
-  border-radius: 0 0 6px 6px;
-  border-top: none;
+  background-color: transparent;
+}
+.d2ps-tab__button:hover {
+  background-color: var(--interface-menu-component-surface-selected);
 }
 .d2ps-tab__button[data-active=true] {
-  --p-button-primary-background: #000;
+  background-color: var(--interface-menu-component-surface-selected);
 }
 
 .d2ps-search {
   display: flex;
   gap: 0.5rem;
+  width: 100%;
+  padding: 8px;
 }
 
 .d2ps-search__input {
-  padding: 0.5rem;
   width: 100%;
+  background-color: var(--p-inputtext-background, #090909);
+  color: var(--p-inputtext-color, #fff);
+  border: 1px solid var(--p-inputtext-border-color, #666);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+}
+
+dialog.d2ps-dialog-root {
+  min-width: 360px;
+  padding: 0;
+  background: var(--p-dialog-background, #2a2a2a);
+  border: 1px solid var(--p-dialog-border-color);
+  border-radius: 8px;
+  color: var(--p-dialog-color, #fff);
+  box-shadow: none;
+}
+dialog.d2ps-dialog-root::backdrop {
+  background: var(--p-mask-background);
+}
+dialog.d2ps-dialog-root .d2ps-dialog {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+dialog.d2ps-dialog-root .d2ps-dialog.d2ps-dialog--editor {
+  width: 600px;
+}
+dialog.d2ps-dialog-root .d2ps-dialog__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+dialog.d2ps-dialog-root .d2ps-dialog__message {
+  margin: 0;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+dialog.d2ps-dialog-root .d2ps-dialog__label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+dialog.d2ps-dialog-root .d2ps-dialog__select,
+dialog.d2ps-dialog-root .d2ps-dialog__input {
+  background-color: var(--p-inputtext-background, #090909);
+  color: var(--p-inputtext-color, #fff);
+  border: 1px solid var(--p-inputtext-border-color, #666);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  flex: 1;
+}
+dialog.d2ps-dialog-root .d2ps-dialog__row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+dialog.d2ps-dialog-root .d2ps-dialog__buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+dialog.d2ps-dialog-root .d2ps-dialog__error {
+  margin: 0;
+  color: #f88;
+  font-size: 0.85rem;
+}
+dialog.d2ps-dialog-root button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

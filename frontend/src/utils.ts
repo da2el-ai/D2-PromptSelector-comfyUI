@@ -1,6 +1,42 @@
-import type { AllTags, RawTagsResponse, TagFile, TagCategory, TagItem } from './types';
+import type { AllTags, RawTagsResponse, RawTagValue, TagFile, TagCategory, TagItem } from './types';
 
 const BASE = '/D2_prompt-selector';
+
+/**
+ * ネスト値からワイルドカードプロンプトを生成（オリジナル $_getWildCardPrompt 相当）
+ * - 配列: `{ item1, | item2, | ... }`
+ * - 文字列値のみのオブジェクト: `{ v1, | v2, | ... }`
+ * - ネストオブジェクトを含む場合: '' (ランダム不可)
+ */
+function getWildCardPrompt(value: string[] | Record<string, RawTagValue>): string {
+  if (Array.isArray(value)) {
+    const strs = value.filter((v): v is string => typeof v === 'string');
+    return strs.length > 0 ? `{ ${strs.map((v) => `${v},`).join(' | ')} }` : '';
+  }
+  const vals = Object.values(value);
+  if (vals.some((v) => typeof v === 'object' && v !== null)) return '';
+  const strs = vals.filter((v): v is string => typeof v === 'string');
+  return strs.length > 0 ? `{ ${strs.map((v) => `${v},`).join(' | ')} }` : '';
+}
+
+/** 再帰的に TagItem を生成（オリジナル $_createButtons 相当） */
+function parseTagNode(name: string, value: RawTagValue): TagItem {
+  if (value === null || value === undefined) {
+    return { name, prompt: name };
+  }
+  if (typeof value === 'string') {
+    return { name, prompt: value };
+  }
+  if (Array.isArray(value)) {
+    const children: TagItem[] = value
+      .filter((v): v is string => typeof v === 'string')
+      .map((v) => ({ name: v, prompt: v }));
+    return { name, prompt: getWildCardPrompt(value), children };
+  }
+  // ネストオブジェクト
+  const children: TagItem[] = Object.entries(value).map(([k, v]) => parseTagNode(k, v));
+  return { name, prompt: getWildCardPrompt(value as Record<string, RawTagValue>), children };
+}
 
 /** バックエンドの生レスポンスを AllTags 形式に変換する */
 export function parseTagsResponse(raw: RawTagsResponse): AllTags {
@@ -24,8 +60,8 @@ export function parseTagsResponse(raw: RawTagsResponse): AllTags {
           }
         }
       } else {
-        for (const [name, prompt] of Object.entries(items)) {
-          tagItems.push({ name, prompt: String(prompt) });
+        for (const [name, value] of Object.entries(items)) {
+          tagItems.push(parseTagNode(name, value));
         }
       }
 
@@ -36,6 +72,19 @@ export function parseTagsResponse(raw: RawTagsResponse): AllTags {
     result.push(tagFile);
   }
 
+  return result;
+}
+
+/** TagItem のリーフノードのみを再帰的に収集（検索用） */
+export function flattenLeaves(items: TagItem[]): TagItem[] {
+  const result: TagItem[] = [];
+  for (const item of items) {
+    if (item.children) {
+      result.push(...flattenLeaves(item.children));
+    } else {
+      result.push(item);
+    }
+  }
   return result;
 }
 

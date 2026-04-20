@@ -4,13 +4,18 @@
 }
 
 .d2ps-tab__button{
-    --p-button-primary-background: #244f7a;
-    --p-button-primary-border-color: #48729b;
-    --p-button-primary-color: #fff;
-    border-radius: 0 0 6px 6px;
-    border-top: none;
+    // --p-button-primary-background: #244f7a;
+    // --p-button-primary-border-color: #48729b;
+    // --p-button-primary-color: #fff;
+    // border-radius: 0 0 6px 6px;
+    // border-top: none;
+    background-color: transparent;
+
+    &:hover{
+        background-color: var(--interface-menu-component-surface-selected);
+    }
 
     &[data-active="true"]{
-        --p-button-primary-background: #000;
+        background-color: var(--interface-menu-component-surface-selected);
     }
 }
