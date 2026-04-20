@@ -7,6 +7,7 @@
     export let file: TagFile;
     export let onClickTag: (prompt: string, closePanel: boolean) => void;
     export let onEditTag: (categoryId: string, name: string, prompt: string) => void;
+    export let onEditCategory: (categoryId: string) => void;
     export let onDeleteItem: (categoryId: string, itemName: string) => void;
     export let onDeleteCategory: (categoryId: string) => void;
 
@@ -34,6 +35,7 @@
                     prompt={randomPrompt}
                     {onClickTag}
                     onDelete={() => onDeleteCategory(category.categoryId)}
+                    onEditCategory={() => onEditCategory(category.categoryId)}
                 />
             </div>
             <!-- タグノード群（再帰レンダリング） -->

@@ -8,6 +8,7 @@
     import ToolTip from './ToolTip.svelte';
     import MigrationDialog from './MigrationDialog.svelte';
     import TagEditorDialog from './TagEditorDialog.svelte';
+    import CategoryEditorDialog from './CategoryEditorDialog.svelte';
     import ConfirmDialog from './ConfirmDialog.svelte';
     import { insertTextToTarget, apiGet, apiPost } from '../utils';
     import { get } from 'svelte/store';
@@ -15,6 +16,7 @@
 
     let migrationDialog: MigrationDialog;
     let editorDialog: TagEditorDialog;
+    let categoryEditorDialog: CategoryEditorDialog;
     let confirmDialog: ConfirmDialog;
 
     async function handleReload() {
@@ -64,6 +66,11 @@
     /** タグ編集ダイアログを開く */
     function handleEditTag(fileId: string, categoryId: string, name: string, prompt: string) {
         editorDialog.openEdit(fileId, categoryId, name, prompt);
+    }
+
+    /** カテゴリ編集ダイアログを開く */
+    function handleEditCategory(fileId: string, categoryId: string) {
+        categoryEditorDialog.openEdit(fileId, categoryId);
     }
 
     /** タグ削除：確認ダイアログ → API */
@@ -144,6 +151,7 @@
                         {file}
                         onClickTag={handleClickTag}
                         onEditTag={(catId, name, prompt) => handleEditTag(file.fileId, catId, name, prompt)}
+                        onEditCategory={(catId) => handleEditCategory(file.fileId, catId)}
                         onDeleteItem={(catId, name) => handleDeleteItem(file.fileId, catId, name)}
                         onDeleteCategory={(catId) => handleDeleteCategory(file.fileId, catId)}
                     />
@@ -169,6 +177,9 @@
 
 <!-- タグ追加・編集ダイアログ -->
 <TagEditorDialog bind:this={editorDialog} on:done={() => {}} />
+
+<!-- カテゴリ編集ダイアログ -->
+<CategoryEditorDialog bind:this={categoryEditorDialog} on:done={() => {}} />
 
 <!-- 共通の確認ダイアログ -->
 <ConfirmDialog bind:this={confirmDialog} />

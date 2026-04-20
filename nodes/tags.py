@@ -82,6 +82,24 @@ async def route_d2_ps_edit_item(request):
 
 
 """
+カテゴリ編集（リネーム / ファイル間移動）
+"""
+@PromptServer.instance.routes.post("/D2_prompt-selector/edit_category")
+async def route_d2_ps_edit_category(request):
+    try:
+        body = await request.json()
+        result = TagsUtil.edit_category(
+            file=body["file"],
+            category=body["category"],
+            new_file=body["new_file"],
+            new_category=body["new_category"],
+        )
+        return web.json_response(result)
+    except Exception as e:
+        return web.json_response({"error": str(e)}, status=500)
+
+
+"""
 タグ / カテゴリ削除
 """
 @PromptServer.instance.routes.post("/D2_prompt-selector/delete_item")
@@ -314,6 +332,46 @@ class TagsUtil:
         else:
             cls._save_file(src_file, src_data)
             cls._save_file(dst_file, dst_data)
+
+        return {"success": True}
+
+    @classmethod
+    def edit_category(cls, file: str, category: str,
+                      new_file: str, new_category: str) -> dict:
+        """
+        カテゴリを編集（リネーム または ファイル間移動）。
+        - new_file が file と異なる場合：カテゴリごと（含むタグも一緒に）移動
+        - new_file == file かつ new_category == category：何も変更せず success
+        - 移動先 / リネーム先に同名カテゴリが既存（かつ元と異なる）の場合は {"error": "duplicate"}
+        - 元カテゴリが存在しない場合は {"error": "not_found"}
+        """
+        src_data = cls._load_file(file)
+        if cls._needs_migration(src_data):
+            return {"error": "migration_needed"}
+
+        if category not in src_data:
+            return {"error": "not_found"}
+
+        if file == new_file:
+            dst_data = src_data
+        else:
+            dst_data = cls._load_file(new_file)
+            if cls._needs_migration(dst_data):
+                return {"error": "migration_needed"}
+
+        is_same_slot = (file == new_file and new_category == category)
+        if not is_same_slot and new_category in dst_data:
+            return {"error": "duplicate"}
+
+        items = src_data[category]
+        del src_data[category]
+        dst_data[new_category] = items
+
+        if file == new_file:
+            cls._save_file(file, src_data)
+        else:
+            cls._save_file(file, src_data)
+            cls._save_file(new_file, dst_data)
 
         return {"success": True}
 
