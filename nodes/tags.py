@@ -256,6 +256,25 @@ class TagsUtil:
         )
 
     @classmethod
+    def _rename_key_in_place(cls, d: dict, old_key: str, new_key: str, new_value) -> None:
+        """
+        dict 内の old_key を new_key に変更しつつ、その位置に new_value を配置する。
+        順序保持のために新しい dict を組み立てて中身を入れ替える。
+        old_key == new_key の場合は単純に値を上書き。
+        """
+        if old_key == new_key:
+            d[old_key] = new_value
+            return
+        rebuilt = {}
+        for k, v in d.items():
+            if k == old_key:
+                rebuilt[new_key] = new_value
+            else:
+                rebuilt[k] = v
+        d.clear()
+        d.update(rebuilt)
+
+    @classmethod
     def add_item(cls, file: str, category: str, new_category: str | None,
                  name: str, prompt: str) -> dict:
         """
@@ -316,15 +335,15 @@ class TagsUtil:
         if not is_same_slot and new_name in dst_data[dst_cat]:
             return {"error": "duplicate"}
 
-        # 元のアイテムを削除
-        del src_data[category][name]
-
-        # 元カテゴリが空になったら削除
-        if not src_data[category]:
-            del src_data[category]
-
-        # 移動先に追加
-        dst_data[dst_cat][new_name] = new_prompt
+        # 同ファイル・同カテゴリ内の編集は順序を保持して in-place 更新
+        if dst_file == src_file and dst_cat == category:
+            cls._rename_key_in_place(src_data[category], name, new_name, new_prompt)
+        else:
+            # 移動：元を削除して移動先末尾に追加
+            del src_data[category][name]
+            if not src_data[category]:
+                del src_data[category]
+            dst_data[dst_cat][new_name] = new_prompt
 
         # 保存
         if dst_file == src_file:
@@ -363,9 +382,14 @@ class TagsUtil:
         if not is_same_slot and new_category in dst_data:
             return {"error": "duplicate"}
 
-        items = src_data[category]
-        del src_data[category]
-        dst_data[new_category] = items
+        # 同ファイル内のリネームは順序を保持して in-place 更新
+        if file == new_file:
+            cls._rename_key_in_place(src_data, category, new_category, src_data[category])
+        else:
+            # ファイル間移動：元を削除して移動先末尾に追加
+            items = src_data[category]
+            del src_data[category]
+            dst_data[new_category] = items
 
         if file == new_file:
             cls._save_file(file, src_data)
