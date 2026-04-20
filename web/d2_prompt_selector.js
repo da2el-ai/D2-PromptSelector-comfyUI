@@ -1207,12 +1207,12 @@ function get_each_context$4(ctx, list, i) {
   child_ctx[6] = list[i];
   return child_ctx;
 }
-function create_else_block$2(ctx) {
+function create_else_block$3(ctx) {
   let current_block_type_index;
   let if_block;
   let if_block_anchor;
   let current;
-  const if_block_creators = [create_if_block_1$2, create_else_block_1];
+  const if_block_creators = [create_if_block_1$3, create_else_block_1];
   const if_blocks = [];
   function select_block_type_1(ctx2, dirty) {
     if (
@@ -1438,7 +1438,7 @@ function create_else_block_1(ctx) {
     }
   };
 }
-function create_if_block_1$2(ctx) {
+function create_if_block_1$3(ctx) {
   let tagbutton;
   let current;
   tagbutton = new TagButton({
@@ -1587,7 +1587,7 @@ function create_fragment$8(ctx) {
   let if_block;
   let if_block_anchor;
   let current;
-  const if_block_creators = [create_if_block$4, create_else_block$2];
+  const if_block_creators = [create_if_block$4, create_else_block$3];
   const if_blocks = [];
   function select_block_type(ctx2, dirty) {
     if (
@@ -2058,22 +2058,21 @@ class CategoryView extends SvelteComponent {
 }
 function get_each_context$2(ctx, list, i) {
   const child_ctx = ctx.slice();
-  child_ctx[8] = list[i];
+  child_ctx[13] = list[i];
   return child_ctx;
 }
-function create_each_block$2(key_1, ctx) {
-  let first;
+function create_else_block$2(ctx) {
   let tagbutton;
   let current;
   tagbutton = new TagButton({
     props: {
       name: (
         /*item*/
-        ctx[8].name
+        ctx[13].name
       ),
       prompt: (
         /*item*/
-        ctx[8].prompt
+        ctx[13].prompt
       ),
       onClickTag: (
         /*onClickTag*/
@@ -2082,30 +2081,24 @@ function create_each_block$2(key_1, ctx) {
     }
   });
   return {
-    key: key_1,
-    first: null,
     c() {
-      first = empty();
       create_component(tagbutton.$$.fragment);
-      this.first = first;
     },
     m(target, anchor) {
-      insert(target, first, anchor);
       mount_component(tagbutton, target, anchor);
       current = true;
     },
-    p(new_ctx, dirty) {
-      ctx = new_ctx;
+    p(ctx2, dirty) {
       const tagbutton_changes = {};
       if (dirty & /*results*/
-      4) tagbutton_changes.name = /*item*/
-      ctx[8].name;
+      16) tagbutton_changes.name = /*item*/
+      ctx2[13].name;
       if (dirty & /*results*/
-      4) tagbutton_changes.prompt = /*item*/
-      ctx[8].prompt;
+      16) tagbutton_changes.prompt = /*item*/
+      ctx2[13].prompt;
       if (dirty & /*onClickTag*/
       1) tagbutton_changes.onClickTag = /*onClickTag*/
-      ctx[0];
+      ctx2[0];
       tagbutton.$set(tagbutton_changes);
     },
     i(local) {
@@ -2118,10 +2111,154 @@ function create_each_block$2(key_1, ctx) {
       current = false;
     },
     d(detaching) {
+      destroy_component(tagbutton, detaching);
+    }
+  };
+}
+function create_if_block_1$2(ctx) {
+  let tagbutton;
+  let current;
+  function func(...args) {
+    return (
+      /*func*/
+      ctx[10](
+        /*item*/
+        ctx[13],
+        ...args
+      )
+    );
+  }
+  function func_1(...args) {
+    return (
+      /*func_1*/
+      ctx[11](
+        /*item*/
+        ctx[13],
+        ...args
+      )
+    );
+  }
+  tagbutton = new TagButton({
+    props: {
+      name: (
+        /*item*/
+        ctx[13].name
+      ),
+      prompt: (
+        /*item*/
+        ctx[13].prompt
+      ),
+      onClickTag: func,
+      onDeleteItem: func_1
+    }
+  });
+  return {
+    c() {
+      create_component(tagbutton.$$.fragment);
+    },
+    m(target, anchor) {
+      mount_component(tagbutton, target, anchor);
+      current = true;
+    },
+    p(new_ctx, dirty) {
+      ctx = new_ctx;
+      const tagbutton_changes = {};
+      if (dirty & /*results*/
+      16) tagbutton_changes.name = /*item*/
+      ctx[13].name;
+      if (dirty & /*results*/
+      16) tagbutton_changes.prompt = /*item*/
+      ctx[13].prompt;
+      if (dirty & /*onEditTag, results*/
+      18) tagbutton_changes.onClickTag = func;
+      if (dirty & /*onDeleteItem, results*/
+      20) tagbutton_changes.onDeleteItem = func_1;
+      tagbutton.$set(tagbutton_changes);
+    },
+    i(local) {
+      if (current) return;
+      transition_in(tagbutton.$$.fragment, local);
+      current = true;
+    },
+    o(local) {
+      transition_out(tagbutton.$$.fragment, local);
+      current = false;
+    },
+    d(detaching) {
+      destroy_component(tagbutton, detaching);
+    }
+  };
+}
+function create_each_block$2(key_1, ctx) {
+  let first;
+  let current_block_type_index;
+  let if_block;
+  let if_block_anchor;
+  let current;
+  const if_block_creators = [create_if_block_1$2, create_else_block$2];
+  const if_blocks = [];
+  function select_block_type(ctx2, dirty) {
+    if (
+      /*$isEditMode*/
+      ctx2[6]
+    ) return 0;
+    return 1;
+  }
+  current_block_type_index = select_block_type(ctx);
+  if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+  return {
+    key: key_1,
+    first: null,
+    c() {
+      first = empty();
+      if_block.c();
+      if_block_anchor = empty();
+      this.first = first;
+    },
+    m(target, anchor) {
+      insert(target, first, anchor);
+      if_blocks[current_block_type_index].m(target, anchor);
+      insert(target, if_block_anchor, anchor);
+      current = true;
+    },
+    p(new_ctx, dirty) {
+      ctx = new_ctx;
+      let previous_block_index = current_block_type_index;
+      current_block_type_index = select_block_type(ctx);
+      if (current_block_type_index === previous_block_index) {
+        if_blocks[current_block_type_index].p(ctx, dirty);
+      } else {
+        group_outros();
+        transition_out(if_blocks[previous_block_index], 1, 1, () => {
+          if_blocks[previous_block_index] = null;
+        });
+        check_outros();
+        if_block = if_blocks[current_block_type_index];
+        if (!if_block) {
+          if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+          if_block.c();
+        } else {
+          if_block.p(ctx, dirty);
+        }
+        transition_in(if_block, 1);
+        if_block.m(if_block_anchor.parentNode, if_block_anchor);
+      }
+    },
+    i(local) {
+      if (current) return;
+      transition_in(if_block);
+      current = true;
+    },
+    o(local) {
+      transition_out(if_block);
+      current = false;
+    },
+    d(detaching) {
       if (detaching) {
         detach(first);
+        detach(if_block_anchor);
       }
-      destroy_component(tagbutton, detaching);
+      if_blocks[current_block_type_index].d(detaching);
     }
   };
 }
@@ -2154,20 +2291,22 @@ function create_fragment$6(ctx) {
   let t1;
   let show_if = (
     /*keyword*/
-    ctx[1].trim() && /*results*/
-    ctx[2].length === 0
+    ctx[3].trim() && /*results*/
+    ctx[4].length === 0
   );
   let current;
   let mounted;
   let dispose;
   let each_value = ensure_array_like(
     /*results*/
-    ctx[2]
+    ctx[4]
   );
   const get_key = (ctx2) => (
     /*item*/
-    ctx2[8].name + /*item*/
-    ctx2[8].prompt
+    ctx2[13].fileId + /*item*/
+    ctx2[13].categoryId + /*item*/
+    ctx2[13].name + /*item*/
+    ctx2[13].prompt
   );
   for (let i = 0; i < each_value.length; i += 1) {
     let child_ctx = get_each_context$2(ctx, each_value, i);
@@ -2197,7 +2336,7 @@ function create_fragment$6(ctx) {
         div2,
         "display",
         /*isActive*/
-        ctx[3] ? "flex" : "none"
+        ctx[5] ? "flex" : "none"
       );
     },
     m(target, anchor) {
@@ -2207,7 +2346,7 @@ function create_fragment$6(ctx) {
       set_input_value(
         input,
         /*keyword*/
-        ctx[1]
+        ctx[3]
       );
       append(div2, t0);
       append(div2, div1);
@@ -2224,35 +2363,35 @@ function create_fragment$6(ctx) {
           input,
           "input",
           /*input_input_handler*/
-          ctx[6]
+          ctx[9]
         );
         mounted = true;
       }
     },
     p(ctx2, [dirty]) {
       if (dirty & /*keyword*/
-      2 && input.value !== /*keyword*/
-      ctx2[1]) {
+      8 && input.value !== /*keyword*/
+      ctx2[3]) {
         set_input_value(
           input,
           /*keyword*/
-          ctx2[1]
+          ctx2[3]
         );
       }
-      if (dirty & /*results, onClickTag*/
-      5) {
+      if (dirty & /*results, onEditTag, onDeleteItem, $isEditMode, onClickTag*/
+      87) {
         each_value = ensure_array_like(
           /*results*/
-          ctx2[2]
+          ctx2[4]
         );
         group_outros();
         each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx2, each_value, each_1_lookup, div1, outro_and_destroy_block, create_each_block$2, t1, get_each_context$2);
         check_outros();
       }
       if (dirty & /*keyword, results*/
-      6) show_if = /*keyword*/
-      ctx2[1].trim() && /*results*/
-      ctx2[2].length === 0;
+      24) show_if = /*keyword*/
+      ctx2[3].trim() && /*results*/
+      ctx2[4].length === 0;
       if (show_if) {
         if (if_block) ;
         else {
@@ -2265,12 +2404,12 @@ function create_fragment$6(ctx) {
         if_block = null;
       }
       if (dirty & /*isActive*/
-      8) {
+      32) {
         set_style(
           div2,
           "display",
           /*isActive*/
-          ctx2[3] ? "flex" : "none"
+          ctx2[5] ? "flex" : "none"
         );
       }
     },
@@ -2305,26 +2444,34 @@ function instance$6($$self, $$props, $$invalidate) {
   let results;
   let $sortedTagFiles;
   let $activeTabId;
-  component_subscribe($$self, sortedTagFiles, ($$value) => $$invalidate(4, $sortedTagFiles = $$value));
-  component_subscribe($$self, activeTabId, ($$value) => $$invalidate(5, $activeTabId = $$value));
+  let $isEditMode;
+  component_subscribe($$self, sortedTagFiles, ($$value) => $$invalidate(7, $sortedTagFiles = $$value));
+  component_subscribe($$self, activeTabId, ($$value) => $$invalidate(8, $activeTabId = $$value));
+  component_subscribe($$self, isEditMode, ($$value) => $$invalidate(6, $isEditMode = $$value));
   let { onClickTag } = $$props;
+  let { onEditTag } = $$props;
+  let { onDeleteItem } = $$props;
   const SEARCH_TAB = Constants.ICON_SEARCH;
   let keyword = "";
   function input_input_handler() {
     keyword = this.value;
-    $$invalidate(1, keyword);
+    $$invalidate(3, keyword);
   }
+  const func = (item, _p, _c) => onEditTag(item.fileId, item.categoryId, item.name, item.prompt);
+  const func_1 = (item, name) => onDeleteItem(item.fileId, item.categoryId, name);
   $$self.$$set = ($$props2) => {
     if ("onClickTag" in $$props2) $$invalidate(0, onClickTag = $$props2.onClickTag);
+    if ("onEditTag" in $$props2) $$invalidate(1, onEditTag = $$props2.onEditTag);
+    if ("onDeleteItem" in $$props2) $$invalidate(2, onDeleteItem = $$props2.onDeleteItem);
   };
   $$self.$$.update = () => {
     if ($$self.$$.dirty & /*$activeTabId*/
-    32) {
-      $$invalidate(3, isActive = $activeTabId === SEARCH_TAB);
+    256) {
+      $$invalidate(5, isActive = $activeTabId === SEARCH_TAB);
     }
     if ($$self.$$.dirty & /*keyword, $sortedTagFiles*/
-    18) {
-      $$invalidate(2, results = (() => {
+    136) {
+      $$invalidate(4, results = (() => {
         const kw = keyword.trim().toLowerCase();
         if (!kw) return [];
         const found = [];
@@ -2332,7 +2479,12 @@ function instance$6($$self, $$props, $$invalidate) {
           for (const cat of file.categories) {
             for (const item of flattenLeaves(cat.items)) {
               if (item.name.toLowerCase().includes(kw) || item.prompt.toLowerCase().includes(kw)) {
-                found.push(item);
+                found.push({
+                  fileId: file.fileId,
+                  categoryId: cat.categoryId,
+                  name: item.name,
+                  prompt: item.prompt
+                });
               }
             }
           }
@@ -2343,18 +2495,27 @@ function instance$6($$self, $$props, $$invalidate) {
   };
   return [
     onClickTag,
+    onEditTag,
+    onDeleteItem,
     keyword,
     results,
     isActive,
+    $isEditMode,
     $sortedTagFiles,
     $activeTabId,
-    input_input_handler
+    input_input_handler,
+    func,
+    func_1
   ];
 }
 class SearchView extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$6, create_fragment$6, safe_not_equal, { onClickTag: 0 });
+    init(this, options, instance$6, create_fragment$6, safe_not_equal, {
+      onClickTag: 0,
+      onEditTag: 1,
+      onDeleteItem: 2
+    });
   }
 }
 function create_fragment$5(ctx) {
@@ -3656,10 +3817,20 @@ function create_if_block(ctx) {
     each_1_lookup.set(key, each_blocks[i] = create_each_block(key, child_ctx));
   }
   searchview = new SearchView({
-    props: { onClickTag: (
-      /*handleClickTag*/
-      ctx[8]
-    ) }
+    props: {
+      onClickTag: (
+        /*handleClickTag*/
+        ctx[8]
+      ),
+      onEditTag: (
+        /*handleEditTag*/
+        ctx[12]
+      ),
+      onDeleteItem: (
+        /*handleDeleteItem*/
+        ctx[13]
+      )
+    }
   });
   tabnavi = new TabNavi({});
   tooltip2 = new ToolTip({});

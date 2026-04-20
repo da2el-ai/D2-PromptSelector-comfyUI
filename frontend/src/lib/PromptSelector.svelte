@@ -149,7 +149,11 @@
                     />
                 {/each}
                 <!-- 検索（常にDOM、display で表示切替） -->
-                <SearchView onClickTag={handleClickTag} />
+                <SearchView
+                    onClickTag={handleClickTag}
+                    onEditTag={handleEditTag}
+                    onDeleteItem={handleDeleteItem}
+                />
                 <!-- タブナビ（タグコンテナの最後） -->
                 <TabNavi />
             </div>
