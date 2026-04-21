@@ -9,6 +9,7 @@
     import MigrationDialog from './MigrationDialog.svelte';
     import TagEditorDialog from './TagEditorDialog.svelte';
     import CategoryEditorDialog from './CategoryEditorDialog.svelte';
+    import SortDialog from './SortDialog.svelte';
     import ConfirmDialog from './ConfirmDialog.svelte';
     import { insertTextToTarget, apiGet, apiPost } from '../utils';
     import { get } from 'svelte/store';
@@ -17,6 +18,7 @@
     let migrationDialog: MigrationDialog;
     let editorDialog: TagEditorDialog;
     let categoryEditorDialog: CategoryEditorDialog;
+    let sortDialog: SortDialog;
     let confirmDialog: ConfirmDialog;
 
     async function handleReload() {
@@ -61,6 +63,11 @@
     /** タグ追加ダイアログを開く */
     function handleAddTag() {
         editorDialog.openAdd();
+    }
+
+    /** 並び順ダイアログを開く */
+    function handleOpenSort() {
+        sortDialog.open();
     }
 
     /** タグ編集ダイアログを開く */
@@ -129,6 +136,11 @@
                     class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_PRIMARY} d2ps-btn d2ps-btn--controller"
                     on:click={handleAddTag}>＋ 追加</button
                 >
+                <!-- 並び順ボタン -->
+                <button
+                    class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_PRIMARY} d2ps-btn d2ps-btn--controller"
+                    on:click={handleOpenSort}>並び順</button
+                >
             {/if}
             <!-- 再読み込みボタン -->
             <button
@@ -180,6 +192,9 @@
 
 <!-- カテゴリ編集ダイアログ -->
 <CategoryEditorDialog bind:this={categoryEditorDialog} on:done={() => {}} />
+
+<!-- 並び順ダイアログ -->
+<SortDialog bind:this={sortDialog} />
 
 <!-- 共通の確認ダイアログ -->
 <ConfirmDialog bind:this={confirmDialog} />

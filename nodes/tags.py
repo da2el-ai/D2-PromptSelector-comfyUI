@@ -103,6 +103,49 @@ async def route_d2_ps_edit_category(request):
 
 
 """
+ファイル順を更新（__config__.yml の sort を書き換え）
+"""
+@PromptServer.instance.routes.post("/D2_prompt-selector/reorder_files")
+async def route_d2_ps_reorder_files(request):
+    try:
+        body = await request.json()
+        result = TagsUtil.reorder_files(sort=body["sort"])
+        return web.json_response(result)
+    except Exception as e:
+        return web.json_response({"error": str(e)}, status=500)
+
+
+"""
+カテゴリ順を更新（指定ファイル内）
+"""
+@PromptServer.instance.routes.post("/D2_prompt-selector/reorder_categories")
+async def route_d2_ps_reorder_categories(request):
+    try:
+        body = await request.json()
+        result = TagsUtil.reorder_categories(file=body["file"], sort=body["sort"])
+        return web.json_response(result)
+    except Exception as e:
+        return web.json_response({"error": str(e)}, status=500)
+
+
+"""
+タグ順を更新（指定カテゴリ内）
+"""
+@PromptServer.instance.routes.post("/D2_prompt-selector/reorder_items")
+async def route_d2_ps_reorder_items(request):
+    try:
+        body = await request.json()
+        result = TagsUtil.reorder_items(
+            file=body["file"],
+            category=body["category"],
+            sort=body["sort"],
+        )
+        return web.json_response(result)
+    except Exception as e:
+        return web.json_response({"error": str(e)}, status=500)
+
+
+"""
 タグ / カテゴリ削除
 """
 @PromptServer.instance.routes.post("/D2_prompt-selector/delete_item")
@@ -462,6 +505,72 @@ class TagsUtil:
             cls._save_file(file, src_data)
             cls._save_file(new_file, dst_data)
 
+        return {"success": True}
+
+    @classmethod
+    def reorder_files(cls, sort: list) -> dict:
+        """
+        __config__.yml の sort リストを書き換える。
+        - sort のファイル名集合が、tags/ に存在する .yml ファイル（__config__ を除く）と一致しない場合は {"error": "sort_mismatch"}
+        """
+        existing = {fp.stem for fp in cls.TAGS_DIR.glob("*.yml") if fp.stem != "__config__"}
+        requested = set(sort)
+        if existing != requested:
+            return {"error": "sort_mismatch"}
+
+        config_path = cls.TAGS_DIR / "__config__.yml"
+        if config_path.exists():
+            config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+        else:
+            config = {}
+        config["sort"] = list(sort)
+        config_path.write_text(
+            yaml.dump(config, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        return {"success": True}
+
+    @classmethod
+    def reorder_categories(cls, file: str, sort: list) -> dict:
+        """
+        指定ファイルのカテゴリ順を sort の通りに並び替える。
+        - 既存カテゴリ集合と sort 集合が一致しない場合は {"error": "sort_mismatch"}
+        """
+        data = cls._load_file(file)
+        if cls._needs_migration(data):
+            return {"error": "migration_needed"}
+
+        existing = set(data.keys())
+        requested = set(sort)
+        if existing != requested:
+            return {"error": "sort_mismatch"}
+
+        new_data = {key: data[key] for key in sort}
+        cls._save_file(file, new_data)
+        return {"success": True}
+
+    @classmethod
+    def reorder_items(cls, file: str, category: str, sort: list) -> dict:
+        """
+        指定カテゴリ内のアイテム順を sort の通りに並び替える。
+        - カテゴリが存在しない場合は {"error": "not_found"}
+        - 既存アイテム集合と sort 集合が一致しない場合は {"error": "sort_mismatch"}
+        """
+        data = cls._load_file(file)
+        if cls._needs_migration(data):
+            return {"error": "migration_needed"}
+
+        if category not in data:
+            return {"error": "not_found"}
+
+        items = data[category]
+        existing = set(items.keys())
+        requested = set(sort)
+        if existing != requested:
+            return {"error": "sort_mismatch"}
+
+        data[category] = {key: items[key] for key in sort}
+        cls._save_file(file, data)
         return {"success": True}
 
     @classmethod
