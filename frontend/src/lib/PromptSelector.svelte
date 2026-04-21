@@ -121,8 +121,8 @@
             <!-- 編集ボタン（左端） -->
             {#if $isEditMode}
                 <button
-                    class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_PRIMARY} d2ps-btn d2ps-btn--controller"
-                    on:click={handleEditClick}>編集解除</button
+                    class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_DESTRUCTIVE} d2ps-btn d2ps-btn--controller"
+                    on:click={handleEditClick}>編集完了</button
                 >
             {:else}
                 <button
@@ -169,11 +169,7 @@
                     />
                 {/each}
                 <!-- 検索（常にDOM、display で表示切替） -->
-                <SearchView
-                    onClickTag={handleClickTag}
-                    onEditTag={handleEditTag}
-                    onDeleteItem={handleDeleteItem}
-                />
+                <SearchView onClickTag={handleClickTag} onEditTag={handleEditTag} onDeleteItem={handleDeleteItem} />
                 <!-- タブナビ（タグコンテナの最後） -->
                 <TabNavi />
             </div>
