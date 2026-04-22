@@ -11,15 +11,17 @@
     import CategoryEditorDialog from './CategoryEditorDialog.svelte';
     import SortDialog from './SortDialog.svelte';
     import ConfirmDialog from './ConfirmDialog.svelte';
-    import { insertTextToTarget, apiGet, apiPost } from '../utils';
+    import FileDeleteConfirmDialog from './FileDeleteConfirmDialog.svelte';
+    import { insertTextToTarget, apiGet, apiPost, apiPostWithBackup } from '../utils';
     import { get } from 'svelte/store';
-    import { targetTextArea } from '../stores/ui';
+    import { targetTextArea, activeTabId } from '../stores/ui';
 
     let migrationDialog: MigrationDialog;
     let editorDialog: TagEditorDialog;
     let categoryEditorDialog: CategoryEditorDialog;
     let sortDialog: SortDialog;
     let confirmDialog: ConfirmDialog;
+    let fileDeleteDialog: FileDeleteConfirmDialog;
 
     async function handleReload() {
         await fetchTags();
@@ -88,7 +90,7 @@
             confirmLabel: '削除',
         });
         if (!ok) return;
-        await apiPost('/delete_item', {
+        await apiPostWithBackup('/delete_item', {
             type: 'item',
             file: fileId,
             category: categoryId,
@@ -105,12 +107,33 @@
             confirmLabel: '削除',
         });
         if (!ok) return;
-        await apiPost('/delete_item', {
+        await apiPostWithBackup('/delete_item', {
             type: 'category',
             file: fileId,
             category: categoryId,
         });
         await fetchTags();
+    }
+
+    /** ファイル削除：専用強確認ダイアログ → API → アクティブタブのフォールバック */
+    async function handleDeleteFile(fileId: string) {
+        const file = get(sortedTagFiles).find((f) => f.fileId === fileId);
+        if (!file) return;
+        const categoryCount = file.categories.length;
+        const itemCount = file.categories.reduce((sum, c) => sum + c.items.length, 0);
+
+        const ok = await fileDeleteDialog.open({ fileId, categoryCount, itemCount });
+        if (!ok) return;
+
+        const wasActive = get(activeTabId) === fileId;
+        await apiPostWithBackup('/delete_item', { type: 'file', file: fileId });
+        await fetchTags();
+
+        // 削除したファイルがアクティブタブだった場合、先頭タブに切り替える
+        if (wasActive) {
+            const first = get(sortedTagFiles)[0]?.fileId ?? '';
+            activeTabId.set(first);
+        }
     }
 </script>
 
@@ -171,7 +194,7 @@
                 <!-- 検索（常にDOM、display で表示切替） -->
                 <SearchView onClickTag={handleClickTag} onEditTag={handleEditTag} onDeleteItem={handleDeleteItem} />
                 <!-- タブナビ（タグコンテナの最後） -->
-                <TabNavi />
+                <TabNavi onDeleteFile={handleDeleteFile} />
             </div>
         </div>
 
@@ -196,10 +219,14 @@
     onEditItem={handleEditTag}
     onDeleteCategory={handleDeleteCategory}
     onDeleteItem={handleDeleteItem}
+    onDeleteFile={handleDeleteFile}
 />
 
 <!-- 共通の確認ダイアログ -->
 <ConfirmDialog bind:this={confirmDialog} />
+
+<!-- ファイル削除の強確認ダイアログ -->
+<FileDeleteConfirmDialog bind:this={fileDeleteDialog} />
 
 <style>
     :global(.d2ps-btn--active) {

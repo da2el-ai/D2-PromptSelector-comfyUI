@@ -1,7 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
     import { Constants } from '../Constants';
-    import { apiPost } from '../utils';
+    import { apiPostWithBackup } from '../utils';
     import { sortedTagFiles, fetchTags } from '../stores/tags';
 
     const dispatch = createEventDispatcher<{ done: void }>();
@@ -132,7 +132,7 @@
         errorMsg = '';
         try {
             if (mode === 'add') {
-                await apiPost('/add_item', {
+                await apiPostWithBackup('/add_item', {
                     file: isNewFile ? '__new__' : fileId,
                     new_file: isNewFile ? newFileName.trim() : null,
                     category: isNewCategory ? '__new__' : categoryId,
@@ -141,7 +141,7 @@
                     prompt: prompt.trim(),
                 });
             } else {
-                await apiPost('/edit_item', {
+                await apiPostWithBackup('/edit_item', {
                     file: origFileId,
                     category: origCategoryId,
                     name: origName,

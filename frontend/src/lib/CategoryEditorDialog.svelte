@@ -1,7 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
     import { Constants } from '../Constants';
-    import { apiPost } from '../utils';
+    import { apiPostWithBackup } from '../utils';
     import { sortedTagFiles, fetchTags } from '../stores/tags';
 
     const dispatch = createEventDispatcher<{ done: void }>();
@@ -63,7 +63,7 @@
         saving = true;
         errorMsg = '';
         try {
-            await apiPost('/edit_category', {
+            await apiPostWithBackup('/edit_category', {
                 file: origFileId,
                 category: origCategoryName,
                 new_file: isNewFile ? '__new__' : fileId,

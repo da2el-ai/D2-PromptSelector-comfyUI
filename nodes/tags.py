@@ -1,9 +1,25 @@
 import yaml
 import json
 import shutil
+from datetime import datetime
 from pathlib import Path
 from aiohttp import web
 from server import PromptServer
+
+
+# 書き込み API のボディから backup_count を取り出すデフォルト値
+# フロントエンドが未指定の場合のフォールバック（SPEC.md §4.5 に従い 10 段階）
+DEFAULT_BACKUP_COUNT = 10
+
+
+def _backup_count_from(body: dict) -> int:
+    """リクエストボディから backup_count を取り出し、範囲を 0〜100 にクリップして返す"""
+    raw = body.get("backup_count", DEFAULT_BACKUP_COUNT)
+    try:
+        n = int(raw)
+    except (TypeError, ValueError):
+        n = DEFAULT_BACKUP_COUNT
+    return max(0, min(100, n))
 
 
 """
@@ -30,7 +46,8 @@ async def route_d2_ps_check_migration_needed(request):
 
 """
 マイグレーション実行
-tags/ を tags_bak/ にバックアップしてから新形式に変換する
+tags/ を tags_migration/ にスナップショット保存してから新形式に変換する
+（通常書き込み用の tags_bak_* とは別フォルダ。永続・上書き）
 """
 @PromptServer.instance.routes.post("/D2_prompt-selector/migrate")
 async def route_d2_ps_migrate(request):
@@ -48,6 +65,7 @@ async def route_d2_ps_migrate(request):
 async def route_d2_ps_add_item(request):
     try:
         body = await request.json()
+        TagsUtil.create_backup(_backup_count_from(body))
         result = TagsUtil.add_item(
             file=body["file"],
             category=body["category"],
@@ -68,6 +86,7 @@ async def route_d2_ps_add_item(request):
 async def route_d2_ps_edit_item(request):
     try:
         body = await request.json()
+        TagsUtil.create_backup(_backup_count_from(body))
         result = TagsUtil.edit_item(
             file=body["file"],
             category=body["category"],
@@ -90,6 +109,7 @@ async def route_d2_ps_edit_item(request):
 async def route_d2_ps_edit_category(request):
     try:
         body = await request.json()
+        TagsUtil.create_backup(_backup_count_from(body))
         result = TagsUtil.edit_category(
             file=body["file"],
             category=body["category"],
@@ -146,16 +166,17 @@ async def route_d2_ps_reorder_items(request):
 
 
 """
-タグ / カテゴリ削除
+タグ / カテゴリ / ファイル削除
 """
 @PromptServer.instance.routes.post("/D2_prompt-selector/delete_item")
 async def route_d2_ps_delete_item(request):
     try:
         body = await request.json()
+        TagsUtil.create_backup(_backup_count_from(body))
         result = TagsUtil.delete_item(
             type=body["type"],
             file=body["file"],
-            category=body["category"],
+            category=body.get("category"),
             name=body.get("name"),
         )
         return web.json_response(result)
@@ -179,6 +200,60 @@ class TagsUtil:
             with open(filepath, "r", encoding="utf-8") as file:
                 yml = yaml.safe_load(file)
                 cls.tags[filepath.stem] = yml
+
+    # ------------------------------------------------------------------ #
+    # バックアップ（書き込み系 API 実行前にスナップショット作成）
+    # ------------------------------------------------------------------ #
+
+    BACKUP_PREFIX = "tags_bak_"
+
+    @classmethod
+    def _new_backup_path(cls) -> Path:
+        """タイムスタンプ名の新規バックアップパスを返す（秒単位衝突時は連番を付加）"""
+        base = f"{cls.BACKUP_PREFIX}{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        path = cls.BASE_DIR / base
+        if not path.exists():
+            return path
+        for i in range(1, 100):
+            path = cls.BASE_DIR / f"{base}_{i}"
+            if not path.exists():
+                return path
+        raise RuntimeError("backup folder name collision (unexpected)")
+
+    @classmethod
+    def create_backup(cls, backup_count: int):
+        """
+        書き込み直前に tags/ を tags_bak_YYYYMMDD_HHMMSS/ にスナップショット。
+        その後、backup_count 件を超えた古いバックアップを削除する。
+        - backup_count <= 0 の場合は何もしない（機能無効）
+        """
+        if backup_count <= 0:
+            return
+        if not cls.TAGS_DIR.exists():
+            return
+        target = cls._new_backup_path()
+        shutil.copytree(cls.TAGS_DIR, target)
+        cls._rotate_backups(backup_count)
+
+    @classmethod
+    def _rotate_backups(cls, backup_count: int):
+        """
+        tags_bak_* を名前（= タイムスタンプ）昇順でソートし、古い方から
+        backup_count を超えた分を削除する。
+        tags_migration/ は対象外（プレフィックスが異なる）。
+        """
+        backups = sorted(
+            (
+                p for p in cls.BASE_DIR.iterdir()
+                if p.is_dir() and p.name.startswith(cls.BACKUP_PREFIX)
+            ),
+            key=lambda p: p.name,
+        )
+        excess = len(backups) - backup_count
+        if excess <= 0:
+            return
+        for old in backups[:excess]:
+            shutil.rmtree(old, ignore_errors=True)
 
     # ------------------------------------------------------------------ #
     # マイグレーション関連
@@ -217,13 +292,14 @@ class TagsUtil:
     @classmethod
     def do_migrate(cls):
         """
-        tags/ を tags_bak/ にバックアップし、全 .yml を新形式に変換して保存する。
+        tags/ を tags_migration/ にスナップショット保存し、全 .yml を新形式に変換して保存する。
+        （通常書き込み時の tags_bak_* ローテーションとは別。永続で 1 フォルダのみ）
         """
-        # バックアップ
-        bak_dir = cls.BASE_DIR / "tags_bak"
-        if bak_dir.exists():
-            shutil.rmtree(bak_dir)
-        shutil.copytree(cls.TAGS_DIR, bak_dir)
+        # マイグレーション直前のスナップショット（固定名・上書き）
+        migration_dir = cls.BASE_DIR / "tags_migration"
+        if migration_dir.exists():
+            shutil.rmtree(migration_dir)
+        shutil.copytree(cls.TAGS_DIR, migration_dir)
 
         # 各ファイルを変換
         for filepath in cls.TAGS_DIR.glob("*.yml"):
@@ -575,13 +651,18 @@ class TagsUtil:
 
     @classmethod
     def delete_item(cls, type: str, file: str,
-                    category: str, name: str | None = None) -> dict:
+                    category: str | None = None, name: str | None = None) -> dict:
         """
-        タグ or カテゴリを削除する。
+        タグ / カテゴリ / ファイルを削除する。
         - type == "item"     : 指定タグを削除。カテゴリが空になれば合わせて削除
         - type == "category" : カテゴリごと削除
+        - type == "file"     : tags/{file}.yml を物理削除し、__config__.yml の sort からも除外
         - 成功時は {"success": True} を返す
         """
+        # ファイル削除は先に処理（ファイル内容を読み込む前に分岐）
+        if type == "file":
+            return cls._delete_file(file)
+
         data = cls._load_file(file)
         if cls._needs_migration(data):
             return {"error": "migration_needed"}
@@ -602,4 +683,36 @@ class TagsUtil:
             return {"error": "invalid_type"}
 
         cls._save_file(file, data)
+        return {"success": True}
+
+    @classmethod
+    def _delete_file(cls, file: str) -> dict:
+        """
+        tags/{file}.yml を物理削除し、__config__.yml の sort リストから除外する。
+        - 対象ファイルが存在しない場合は {"error": "not_found"}
+        - __config__.yml は削除対象外（予約名）
+        """
+        stem = (file or "").strip()
+        if not stem or stem == "__config__":
+            return {"error": "invalid_file_name"}
+
+        filepath = cls.TAGS_DIR / f"{stem}.yml"
+        if not filepath.exists():
+            return {"error": "not_found"}
+
+        filepath.unlink()
+
+        # __config__.yml の sort リストから除外
+        config_path = cls.TAGS_DIR / "__config__.yml"
+        if config_path.exists():
+            config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+            sort_list = config.get("sort") or []
+            if stem in sort_list:
+                sort_list.remove(stem)
+                config["sort"] = sort_list
+                config_path.write_text(
+                    yaml.dump(config, allow_unicode=True, sort_keys=False),
+                    encoding="utf-8",
+                )
+
         return {"success": True}

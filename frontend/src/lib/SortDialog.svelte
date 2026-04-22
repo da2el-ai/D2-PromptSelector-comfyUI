@@ -22,6 +22,8 @@
     // 削除ハンドラ（親の PromptSelector から注入。内部で ConfirmDialog → API → fetchTags）
     export let onDeleteCategory: (fileId: string, categoryId: string) => void = () => {};
     export let onDeleteItem: (fileId: string, categoryId: string, name: string) => void = () => {};
+    // ファイル削除ハンドラ（内部で FileDeleteConfirmDialog → API → fetchTags → アクティブタブ切替）
+    export let onDeleteFile: (fileId: string) => void = () => {};
 
     let dialog: HTMLDialogElement;
 
@@ -158,15 +160,7 @@
 
     // ---- DnD ハンドラ ----
 
-    // 診断用：dragover ログのスパムを防ぐため、直前ログと同じものは出さない
-    let lastDragoverLogKey = '';
-    // 診断用：drop が発火したかを dragend で確認できるようにする
-    let dropFired = false;
-
     function handleDragStart(info: DragInfo, e: DragEvent) {
-        console.log('[D2PS-Sort] dragstart on handle', { info });
-        dropFired = false;
-        lastDragoverLogKey = '';
         dragging = info;
         workingOrder = null;
         if (e.dataTransfer) {
@@ -183,11 +177,9 @@
     }
 
     function handleDragEnd() {
-        console.log('[D2PS-Sort] dragend', { dragging, workingOrder, dropFired });
         // drop が発火していれば dragging は既に null のはず。
         // dragging が残っている＝ キャンセル（ESC や無効な場所へのドロップ）と判定して戻す。
         if (dragging) {
-            console.log('[D2PS-Sort] dragend: cancelling (drop never fired), revert live reorder');
             dragging = null;
             workingOrder = null;
         }
@@ -217,23 +209,12 @@
 
     function handleDragOver(target: DragInfo, e: DragEvent) {
         if (!dragging) return;
-        const sameHier = isSameHierarchy(target);
-        // ターゲットが変わった時のみログ（60fps のスパム防止）
-        const logKey = `${keyOf(target)}|${sameHier}`;
-        if (logKey !== lastDragoverLogKey) {
-            console.log('[D2PS-Sort] dragover target', {
-                targetType: target.type,
-                sameHier,
-                target,
-            });
-            lastDragoverLogKey = logKey;
-        }
         // ドラッグ中はどの行でも drop 発火を許可する（ライブ並び替えで DOM が動き、
         // 離した瞬間にカーソルが別階層の子孫行上に来ても drop を取りこぼさないため）
         e.preventDefault();
         if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
         // workingOrder の更新は同階層のときのみ。別階層なら「最後に有効だった順序」を保持
-        if (!sameHier) return;
+        if (!isSameHierarchy(target)) return;
         const el = e.currentTarget as HTMLElement;
         const position = computePosition(e, el);
 
@@ -243,14 +224,12 @@
             const next = reorderArray(current, dragging.fileId, target.fileId, position);
             if (!arraysEqual(current, next)) {
                 workingOrder = { type: 'file', sort: next };
-                console.log('[D2PS-Sort] workingOrder updated (file)', next);
             }
         } else if (dragging.type === 'category' && target.type === 'category') {
             const current = currentCategoryOrder(dragging.fileId);
             const next = reorderArray(current, dragging.categoryId, target.categoryId, position);
             if (!arraysEqual(current, next)) {
                 workingOrder = { type: 'category', fileId: dragging.fileId, sort: next };
-                console.log('[D2PS-Sort] workingOrder updated (category)', next);
             }
         } else if (dragging.type === 'item' && target.type === 'item') {
             const current = currentItemOrder(dragging.fileId, dragging.categoryId);
@@ -262,24 +241,13 @@
                     categoryId: dragging.categoryId,
                     sort: next,
                 };
-                console.log('[D2PS-Sort] workingOrder updated (item)', next);
             }
         }
     }
 
-    async function handleDrop(target: DragInfo, e: DragEvent) {
-        dropFired = true;
-        console.log('[D2PS-Sort] drop fired', {
-            dragging,
-            target,
-            workingOrder,
-            sameHier: dragging ? isSameHierarchy(target) : null,
-        });
+    async function handleDrop(_target: DragInfo, e: DragEvent) {
         // 別階層の行で drop してもよい：workingOrder が既にあればコミットする
-        if (!dragging) {
-            console.log('[D2PS-Sort] drop: ignored (no dragging)');
-            return;
-        }
+        if (!dragging) return;
         e.preventDefault();
 
         const order = workingOrder; // 確定スナップショット
@@ -287,40 +255,26 @@
 
         // 位置が変わっていなければ API は呼ばない
         if (!order) {
-            console.log('[D2PS-Sort] drop: no workingOrder, nothing to save');
             workingOrder = null;
             return;
         }
 
         try {
-            let res: any = null;
             if (order.type === 'file') {
-                console.log('[D2PS-Sort] POST /reorder_files', order.sort);
-                res = await apiPost('/reorder_files', { sort: order.sort });
+                await apiPost('/reorder_files', { sort: order.sort });
             } else if (order.type === 'category') {
-                console.log('[D2PS-Sort] POST /reorder_categories', {
-                    file: order.fileId,
-                    sort: order.sort,
-                });
-                res = await apiPost('/reorder_categories', {
+                await apiPost('/reorder_categories', {
                     file: order.fileId,
                     sort: order.sort,
                 });
             } else if (order.type === 'item') {
-                console.log('[D2PS-Sort] POST /reorder_items', {
-                    file: order.fileId,
-                    category: order.categoryId,
-                    sort: order.sort,
-                });
-                res = await apiPost('/reorder_items', {
+                await apiPost('/reorder_items', {
                     file: order.fileId,
                     category: order.categoryId,
                     sort: order.sort,
                 });
             }
-            console.log('[D2PS-Sort] API response', res);
             await fetchTags();
-            console.log('[D2PS-Sort] fetchTags done');
         } catch (err) {
             console.error('[D2PS-Sort] reorder failed', err);
             await fetchTags();
@@ -379,7 +333,14 @@
                         {expandedFiles.has(file.fileId) ? '▼' : '▷'}
                     </button>
                     <span class="d2ps-sort-row__label">{file.fileId}</span>
-                    <!-- ファイル削除は今回スコープ外（sort_spec.md §7）のため close ボタンなし -->
+                    <button
+                        type="button"
+                        class="d2ps-sort-row__close"
+                        aria-label="ファイルを削除"
+                        on:click={() => onDeleteFile(file.fileId)}
+                    >
+                        x
+                    </button>
                     <span
                         class="d2ps-sort-row__drag-handle drag-handle w-3"
                         role="button"

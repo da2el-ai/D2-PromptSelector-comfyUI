@@ -1,4 +1,6 @@
+import { get } from 'svelte/store';
 import type { AllTags, RawTagsResponse, RawTagValue, TagFile, TagCategory, TagItem } from './types';
+import { backupCount } from './stores/settings';
 
 const BASE = '/D2_prompt-selector';
 
@@ -131,6 +133,19 @@ export async function apiPost<T = unknown>(endpoint: string, body: unknown): Pro
     body: JSON.stringify(body),
   });
   return res.json() as Promise<T>;
+}
+
+/**
+ * fetch ラッパー（POST JSON + backup_count 自動付与）
+ * 書き込み系 API（add_item / edit_item / edit_category / delete_item）で使う。
+ * ボディに settings.backupCount ストアの値を `backup_count` フィールドとして付与する。
+ * reorder_* や migrate などバックアップ不要な API には使わない。
+ */
+export async function apiPostWithBackup<T = unknown>(
+  endpoint: string,
+  body: Record<string, unknown>,
+): Promise<T> {
+  return apiPost<T>(endpoint, { ...body, backup_count: get(backupCount) });
 }
 
 /** fetch ラッパー（GET） */

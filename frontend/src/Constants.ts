@@ -15,4 +15,6 @@ export class Constants {
   static D2_PS_SETTING_X_MARGIN_DEFAULT = 50;
   static D2_PS_SETTING_Y_MARGIN_ID = 'D2.PromptSelector.ShowButtonVerticalMargin';
   static D2_PS_SETTING_Y_MARGIN_DEFAULT = 10;
+  static D2_PS_SETTING_BACKUP_COUNT_ID = 'D2.PromptSelector.BackupCount';
+  static D2_PS_SETTING_BACKUP_COUNT_DEFAULT = 10;
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
     import { Constants } from '../Constants';
+    import { backupCount } from '../stores/settings';
 
     export let app: any;
     export let onToggle: () => void;
@@ -51,6 +52,16 @@
             defaultValue: Constants.D2_PS_SETTING_Y_MARGIN_DEFAULT,
             onChange(value: number) {
                 yMargin = value;
+            },
+        });
+
+        app.ui.settings.addSetting({
+            id: Constants.D2_PS_SETTING_BACKUP_COUNT_ID,
+            name: 'Backup Count (0 = disabled, max 100)',
+            type: 'number',
+            defaultValue: Constants.D2_PS_SETTING_BACKUP_COUNT_DEFAULT,
+            onChange(value: number) {
+                backupCount.set(value);
             },
         });
     }
