@@ -190,7 +190,11 @@
 <CategoryEditorDialog bind:this={categoryEditorDialog} on:done={() => {}} />
 
 <!-- 並び順ダイアログ -->
-<SortDialog bind:this={sortDialog} />
+<SortDialog
+    bind:this={sortDialog}
+    onEditCategory={handleEditCategory}
+    onEditItem={handleEditTag}
+/>
 
 <!-- 共通の確認ダイアログ -->
 <ConfirmDialog bind:this={confirmDialog} />

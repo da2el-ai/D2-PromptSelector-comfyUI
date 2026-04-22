@@ -16,6 +16,15 @@
         | { type: 'category'; fileId: string; sort: string[] }
         | { type: 'item'; fileId: string; categoryId: string; sort: string[] };
 
+    // 編集ダイアログ呼び出し用のハンドラ（親の PromptSelector から注入）
+    export let onEditCategory: (fileId: string, categoryId: string) => void = () => {};
+    export let onEditItem: (
+        fileId: string,
+        categoryId: string,
+        name: string,
+        prompt: string
+    ) => void = () => {};
+
     let dialog: HTMLDialogElement;
 
     // ツリー開閉状態（セッション内で維持、ダイアログを開く度にリセット）
@@ -402,7 +411,13 @@
                             >
                                 {expandedCategories.has(catKey) ? '▼' : '▶'}
                             </button>
-                            <span class="d2ps-sort-row__label">{category.categoryId}</span>
+                            <button
+                                type="button"
+                                class="d2ps-sort-row__label d2ps-sort-row__label--clickable"
+                                on:click={() => onEditCategory(file.fileId, category.categoryId)}
+                            >
+                                {category.categoryId}
+                            </button>
                             <span class="d2ps-sort-row__close">x</span>
                             <span
                                 class="d2ps-sort-row__drag-handle drag-handle w-3"
@@ -427,7 +442,19 @@
                                     on:drop={(e) => handleDrop(itemInfo, e)}
                                 >
                                     <span class="d2ps-sort-row__toggle d2ps-sort-row__toggle--leaf">・</span>
-                                    <span class="d2ps-sort-row__label">{item.name}</span>
+                                    <button
+                                        type="button"
+                                        class="d2ps-sort-row__label d2ps-sort-row__label--clickable"
+                                        on:click={() =>
+                                            onEditItem(
+                                                file.fileId,
+                                                category.categoryId,
+                                                item.name,
+                                                item.prompt
+                                            )}
+                                    >
+                                        {item.name}
+                                    </button>
                                     <span class="d2ps-sort-row__close">x</span>
                                     <span
                                         class="d2ps-sort-row__drag-handle drag-handle w-3"
