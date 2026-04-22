@@ -1,5 +1,6 @@
 <script lang="ts">
     import { Constants } from '../Constants';
+    import { t } from '../i18n';
 
     let dialog: HTMLDialogElement;
 
@@ -48,16 +49,12 @@
 
 <dialog class="d2ps-dialog-root" bind:this={dialog}>
     <div class="d2ps-dialog d2ps-dialog--file-delete">
-        <h3 class="d2ps-dialog__title">ファイルを削除</h3>
+        <h3 class="d2ps-dialog__title">{$t('file.delete.confirm.title')}</h3>
         <p class="d2ps-dialog__message">
-            ファイル <strong>「{fileId}」</strong> を削除しようとしています。<br />
-            このファイルには <strong>{categoryCount}</strong> カテゴリ、<strong>{itemCount}</strong>
-            タグが含まれています。<br />
-            削除すると全て失われます（直前の状態は `tags_bak_*` フォルダに自動保存されます）。
+            {@html $t('file.delete.confirm.message', { fileId, categoryCount, itemCount })}
         </p>
         <p class="d2ps-dialog__message">
-            削除を実行するには、下のフィールドにファイル名
-            <code>{fileId}</code> を正確に入力してください。
+            {@html $t('file.delete.confirm.typePrompt', { fileId })}
         </p>
         <input
             class="d2ps-dialog__input d2ps-dialog__input--confirm"
@@ -70,11 +67,11 @@
             <button
                 class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_DESTRUCTIVE}"
                 disabled={!canDelete}
-                on:click={handleConfirm}>削除</button
+                on:click={handleConfirm}>{$t('common.delete')}</button
             >
             <button
                 class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_SECONDARY}"
-                on:click={handleCancel}>キャンセル</button
+                on:click={handleCancel}>{$t('common.cancel')}</button
             >
         </div>
     </div>

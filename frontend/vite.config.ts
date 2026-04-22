@@ -9,7 +9,10 @@ export default defineConfig({
         sourcemap: true,
         minify: false,
         outDir: resolve(__dirname, '../web'),
-        emptyOutDir: true,
+        // web/locales/ 配下の翻訳 JSON は vite の出力物ではないため、
+        // emptyOutDir でのクリーンアップ対象から外す（false）。
+        // 既存の同名ビルド成果物は rollup が上書きする。
+        emptyOutDir: false,
         rollupOptions: {
             input: {
                 d2_prompt_selector: resolve(__dirname, 'src/index.ts'),

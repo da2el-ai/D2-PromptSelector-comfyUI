@@ -2,6 +2,7 @@
     import { Constants } from '../Constants';
     import { tooltip } from '../stores/ui';
     import { isEditMode } from '../stores/ui';
+    import { t } from '../i18n';
 
     export let name: string;
     export let prompt: string;
@@ -21,7 +22,9 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <span class="d2ps-btn-wrapper">
     {#if $isEditMode}
-        <button class="d2ps-btn d2ps-btn--delete" on:click={() => onDeleteItem?.(name)} title="削除">x</button>
+        <button class="d2ps-btn d2ps-btn--delete" on:click={() => onDeleteItem?.(name)} title={$t('common.delete')}
+            >x</button
+        >
     {/if}
     <button
         class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_PRIMARY} d2ps-btn d2ps-btn--tag"

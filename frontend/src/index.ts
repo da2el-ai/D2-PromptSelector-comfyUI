@@ -1,7 +1,7 @@
 declare var app: any;
 
 import { loadCssFile } from './utils';
-import { targetTextArea, isPanelVisible } from './stores/ui';
+import { targetTextArea, isPanelVisible, isEditMode } from './stores/ui';
 import { fetchTags } from './stores/tags';
 import PromptSelector from './lib/PromptSelector.svelte';
 import ShowButton from './lib/ShowButton.svelte';
@@ -19,6 +19,11 @@ document.addEventListener(
   },
   true
 );
+
+// パネル開閉時は常に通常モードに戻す（× 閉じる、ShowButton トグルなど全経路をカバー）
+isPanelVisible.subscribe(() => {
+  isEditMode.set(false);
+});
 
 // PromptSelector をマウント
 const selectorContainer = document.createElement('div');

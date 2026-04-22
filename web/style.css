@@ -194,3 +194,72 @@ dialog.d2ps-dialog-root button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.d2ps-sort-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.d2ps-sort-row {
+  display: flex;
+  align-items: center;
+  padding-right: 0.5em;
+  align-items: center;
+  background-color: rgb(from var(--p-dialog-color) r g b/0.05);
+  border-radius: 3px;
+  cursor: pointer;
+  user-select: none;
+}
+.d2ps-sort-row:hover {
+  background-color: rgb(from var(--p-dialog-color) r g b/0.1);
+}
+.d2ps-sort-row .d2ps-sort-row__label {
+  flex: 1;
+  text-align: left;
+  padding-block: 0.2em;
+}
+.d2ps-sort-row button.d2ps-sort-row__label--clickable {
+  appearance: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.d2ps-sort-row button.d2ps-sort-row__label--clickable:hover {
+  color: var(--primary-background);
+}
+.d2ps-sort-row .d2ps-sort-row__toggle {
+  cursor: pointer;
+  appearance: none;
+  border: none;
+  background: transparent;
+  scale: 0.8;
+}
+.d2ps-sort-row .d2ps-sort-row__toggle:hover {
+  color: var(--primary-background);
+}
+.d2ps-sort-row .d2ps-sort-row__close {
+  cursor: pointer;
+  appearance: none;
+  border: none;
+  background: transparent;
+}
+.d2ps-sort-row .d2ps-sort-row__close:hover {
+  color: var(--primary-background);
+}
+.d2ps-sort-row .d2ps-sort-row__drag-handle {
+  margin-left: 0.5em;
+  cursor: grab;
+}
+.d2ps-sort-row.d2ps-sort-row--dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+.d2ps-sort-row.d2ps-sort-row--category {
+  padding-left: 1em;
+}
+.d2ps-sort-row.d2ps-sort-row--item {
+  padding-left: 2em;
+}

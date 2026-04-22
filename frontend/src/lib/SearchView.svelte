@@ -4,6 +4,7 @@
     import { activeTabId, isEditMode } from '../stores/ui';
     import { Constants } from '../Constants';
     import { flattenLeaves } from '../utils';
+    import { t } from '../i18n';
 
     export let onClickTag: (prompt: string, closePanel: boolean) => void;
     export let onEditTag: (fileId: string, categoryId: string, name: string, prompt: string) => void;
@@ -41,7 +42,12 @@
 
 <div class="d2ps-tag-field d2ps-tag-field--top d2ps-tag-field--with-random" style:display={isActive ? 'flex' : 'none'}>
     <div class="d2ps-search">
-        <input class="d2ps-search__input" type="text" placeholder="Search..." bind:value={keyword} />
+        <input
+            class="d2ps-search__input"
+            type="text"
+            placeholder={$t('search.placeholder')}
+            bind:value={keyword}
+        />
     </div>
     <div class="d2ps-tag-field">
         {#each results as item (item.fileId + item.categoryId + item.name + item.prompt)}
@@ -57,7 +63,7 @@
             {/if}
         {/each}
         {#if keyword.trim() && results.length === 0}
-            <span style="color: var(--descrip-text)">No results</span>
+            <span style="color: var(--descrip-text)">{$t('search.empty')}</span>
         {/if}
     </div>
 </div>

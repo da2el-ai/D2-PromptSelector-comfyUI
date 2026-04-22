@@ -1,8 +1,10 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
+    import { get } from 'svelte/store';
     import { Constants } from '../Constants';
     import { apiPostWithBackup } from '../utils';
     import { sortedTagFiles, fetchTags } from '../stores/tags';
+    import { t } from '../i18n';
 
     // 保存完了時、旧 fileId と新 fileId を親に通知
     // （親はアクティブタブがリネームされたかチェックして activeTabId を更新する）
@@ -61,27 +63,28 @@
                     new_file_name: newId,
                 },
             );
+            const translate = get(t);
             if (res.error === 'duplicate') {
-                errorMsg = '同じ名前のファイルが存在します';
+                errorMsg = translate('file.error.duplicate');
                 return;
             }
             if (res.error === 'not_found') {
-                errorMsg = '元のファイルが見つかりません';
+                errorMsg = translate('file.error.notFound');
                 return;
             }
             if (res.error === 'invalid_file_name') {
-                errorMsg = 'ファイル名が不正です';
+                errorMsg = translate('file.error.invalidName');
                 return;
             }
             if (!res.success) {
-                errorMsg = '保存中にエラーが発生しました';
+                errorMsg = translate('common.error.generic');
                 return;
             }
             await fetchTags();
             dialog.close();
             dispatch('done', { oldId: origFileName, newId });
         } catch (e) {
-            errorMsg = '保存中にエラーが発生しました';
+            errorMsg = get(t)('common.error.generic');
         } finally {
             saving = false;
         }
@@ -94,19 +97,19 @@
 
 <dialog class="d2ps-dialog-root" bind:this={dialog}>
     <div class="d2ps-dialog">
-        <h3 class="d2ps-dialog__title">ファイル名を変更</h3>
+        <h3 class="d2ps-dialog__title">{$t('file.rename.title')}</h3>
 
         <!-- ファイル名 -->
         <label class="d2ps-dialog__label">
-            <span>ファイル名</span>
+            <span>{$t('file.field.name')}</span>
             <input class="d2ps-dialog__input" type="text" bind:value={fileName} />
         </label>
 
         <!-- エラー・重複 -->
         {#if isDuplicate}
-            <p class="d2ps-dialog__error">同じ名前のファイルが存在します</p>
+            <p class="d2ps-dialog__error">{$t('file.error.duplicate')}</p>
         {:else if isInvalid && fileName.trim() !== ''}
-            <p class="d2ps-dialog__error">ファイル名に使えない文字が含まれています</p>
+            <p class="d2ps-dialog__error">{$t('file.error.invalidChar')}</p>
         {/if}
         {#if errorMsg}
             <p class="d2ps-dialog__error">{errorMsg}</p>
@@ -119,11 +122,11 @@
                 on:click={handleSave}
                 disabled={!canSave}
             >
-                {saving ? '保存中...' : '保存'}
+                {saving ? $t('common.saving') : $t('common.save')}
             </button>
             <button
                 class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_SECONDARY}"
-                on:click={handleCancel}>キャンセル</button
+                on:click={handleCancel}>{$t('common.cancel')}</button
             >
         </div>
     </div>

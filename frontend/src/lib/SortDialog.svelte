@@ -3,6 +3,7 @@
     import { sortedTagFiles, fetchTags } from '../stores/tags';
     import { apiPost } from '../utils';
     import { get } from 'svelte/store';
+    import { t } from '../i18n';
     import type { TagFile, TagCategory, TagItem } from '../types';
 
     type DragInfo =
@@ -314,7 +315,7 @@
 
 <dialog class="d2ps-dialog-root" bind:this={dialog}>
     <div class="d2ps-dialog d2ps-dialog--sort">
-        <h3 class="d2ps-dialog__title">並び順</h3>
+        <h3 class="d2ps-dialog__title">{$t('sort.title')}</h3>
 
         <div class="d2ps-sort-tree text-sm font-inter font-light">
             {#each displayedFiles($sortedTagFiles, workingOrder) as file (file.fileId)}
@@ -329,7 +330,7 @@
                     <button
                         class="d2ps-sort-row__toggle"
                         on:click={() => toggleFile(file.fileId)}
-                        aria-label={expandedFiles.has(file.fileId) ? '折り畳み' : '展開'}
+                        aria-label={expandedFiles.has(file.fileId) ? $t('sort.aria.collapse') : $t('sort.aria.expand')}
                     >
                         {expandedFiles.has(file.fileId) ? '▼' : '▷'}
                     </button>
@@ -343,7 +344,7 @@
                     <button
                         type="button"
                         class="d2ps-sort-row__close"
-                        aria-label="ファイルを削除"
+                        aria-label={$t('sort.aria.deleteFile')}
                         on:click={() => onDeleteFile(file.fileId)}
                     >
                         x
@@ -352,7 +353,7 @@
                         class="d2ps-sort-row__drag-handle drag-handle w-3"
                         role="button"
                         tabindex="-1"
-                        aria-label="ドラッグして並び替え"
+                        aria-label={$t('sort.aria.drag')}
                         draggable="true"
                         on:dragstart={(e) => handleDragStart(fileInfo, e)}
                         on:dragend={handleDragEnd}
@@ -373,7 +374,9 @@
                             <button
                                 class="d2ps-sort-row__toggle"
                                 on:click={() => toggleCategory(file.fileId, category.categoryId)}
-                                aria-label={expandedCategories.has(catKey) ? '折り畳み' : '展開'}
+                                aria-label={expandedCategories.has(catKey)
+                                    ? $t('sort.aria.collapse')
+                                    : $t('sort.aria.expand')}
                             >
                                 {expandedCategories.has(catKey) ? '▼' : '▷'}
                             </button>
@@ -387,7 +390,7 @@
                             <button
                                 type="button"
                                 class="d2ps-sort-row__close"
-                                aria-label="カテゴリを削除"
+                                aria-label={$t('sort.aria.deleteCategory')}
                                 on:click={() => onDeleteCategory(file.fileId, category.categoryId)}
                             >
                                 x
@@ -396,7 +399,7 @@
                                 class="d2ps-sort-row__drag-handle drag-handle w-3"
                                 role="button"
                                 tabindex="-1"
-                                aria-label="ドラッグして並び替え"
+                                aria-label={$t('sort.aria.drag')}
                                 draggable="true"
                                 on:dragstart={(e) => handleDragStart(catInfo, e)}
                                 on:dragend={handleDragEnd}
@@ -425,7 +428,7 @@
                                     <button
                                         type="button"
                                         class="d2ps-sort-row__close"
-                                        aria-label="タグを削除"
+                                        aria-label={$t('sort.aria.deleteTag')}
                                         on:click={() => onDeleteItem(file.fileId, category.categoryId, item.name)}
                                     >
                                         x
@@ -434,7 +437,7 @@
                                         class="d2ps-sort-row__drag-handle drag-handle w-3"
                                         role="button"
                                         tabindex="-1"
-                                        aria-label="ドラッグして並び替え"
+                                        aria-label={$t('sort.aria.drag')}
                                         draggable="true"
                                         on:dragstart={(e) => handleDragStart(itemInfo, e)}
                                         on:dragend={handleDragEnd}
@@ -449,7 +452,7 @@
 
         <div class="d2ps-dialog__buttons">
             <button class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_SECONDARY}" on:click={close}
-                >閉じる</button
+                >{$t('common.close')}</button
             >
         </div>
     </div>

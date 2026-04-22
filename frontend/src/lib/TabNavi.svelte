@@ -3,6 +3,7 @@
     import { isEditMode } from '../stores/ui';
     import { activeTabId } from '../stores/ui';
     import { sortedTagFiles } from '../stores/tags';
+    import { t } from '../i18n';
 
     // ファイル削除ハンドラ（親の PromptSelector が FileDeleteConfirmDialog → API → fetchTags → タブ切替を担当）
     export let onDeleteFile: (fileId: string) => void = () => {};
@@ -26,7 +27,7 @@
                     type="button"
                     class="d2ps-btn d2ps-btn--delete"
                     on:click={() => onDeleteFile(tabId)}
-                    title="ファイルを削除"
+                    title={$t('tabNavi.deleteFile.title')}
                 >
                     x
                 </button>

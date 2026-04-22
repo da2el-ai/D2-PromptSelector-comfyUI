@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Constants } from '../Constants';
     import { backupCount } from '../stores/settings';
+    import { initLocale } from '../i18n';
 
     export let app: any;
     export let onToggle: () => void;
@@ -19,6 +20,10 @@
     })();
 
     export function setup() {
+        // i18n 辞書の読み込みはバックグラウンドで開始。ShowButton の文字は `PS` 固定のため、
+        // 読み込み完了前に描画されても問題にならない。
+        void initLocale(app);
+
         app.ui.settings.addSetting({
             id: Constants.D2_PS_SETTING_LOCATION_ID,
             name: 'ShowButton Location',

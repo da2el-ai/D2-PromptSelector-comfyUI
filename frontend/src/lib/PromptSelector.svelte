@@ -16,6 +16,7 @@
     import { insertTextToTarget, apiGet, apiPost, apiPostWithBackup } from '../utils';
     import { get } from 'svelte/store';
     import { targetTextArea, activeTabId } from '../stores/ui';
+    import { t } from '../i18n';
 
     let migrationDialog: MigrationDialog;
     let editorDialog: TagEditorDialog;
@@ -98,10 +99,11 @@
 
     /** タグ削除：確認ダイアログ → API */
     async function handleDeleteItem(fileId: string, categoryId: string, itemName: string) {
+        const translate = get(t);
         const ok = await confirmDialog.open({
-            title: 'タグを削除',
-            message: `「${itemName}」を削除しますか？`,
-            confirmLabel: '削除',
+            title: translate('tag.delete.confirm.title'),
+            message: translate('tag.delete.confirm.message', { name: itemName }),
+            confirmLabel: translate('common.delete'),
         });
         if (!ok) return;
         await apiPostWithBackup('/delete_item', {
@@ -115,10 +117,11 @@
 
     /** カテゴリ削除：確認ダイアログ → API */
     async function handleDeleteCategory(fileId: string, categoryId: string) {
+        const translate = get(t);
         const ok = await confirmDialog.open({
-            title: 'カテゴリを削除',
-            message: `カテゴリ「${categoryId}」を削除しますか？\n（含まれるタグもすべて削除されます）`,
-            confirmLabel: '削除',
+            title: translate('category.delete.confirm.title'),
+            message: translate('category.delete.confirm.message', { name: categoryId }),
+            confirmLabel: translate('common.delete'),
         });
         if (!ok) return;
         await apiPostWithBackup('/delete_item', {
@@ -159,24 +162,24 @@
             {#if $isEditMode}
                 <button
                     class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_DESTRUCTIVE} d2ps-btn d2ps-btn--controller"
-                    on:click={handleEditClick}>編集完了</button
+                    on:click={handleEditClick}>{$t('button.editDone')}</button
                 >
             {:else}
                 <button
                     class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_SECONDARY} d2ps-btn d2ps-btn--controller"
-                    on:click={handleEditClick}>編集</button
+                    on:click={handleEditClick}>{$t('button.edit')}</button
                 >
             {/if}
             {#if $isEditMode}
                 <!-- タグ追加ボタン -->
                 <button
                     class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_PRIMARY} d2ps-btn d2ps-btn--controller"
-                    on:click={handleAddTag}>＋ 追加</button
+                    on:click={handleAddTag}>{$t('button.add')}</button
                 >
                 <!-- 並び順ボタン -->
                 <button
                     class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_PRIMARY} d2ps-btn d2ps-btn--controller"
-                    on:click={handleOpenSort}>並び順</button
+                    on:click={handleOpenSort}>{$t('button.sort')}</button
                 >
             {/if}
             <!-- 再読み込みボタン -->

@@ -1,8 +1,10 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
+    import { get } from 'svelte/store';
     import { Constants } from '../Constants';
     import { apiPostWithBackup } from '../utils';
     import { sortedTagFiles, fetchTags } from '../stores/tags';
+    import { t } from '../i18n';
 
     const dispatch = createEventDispatcher<{ done: void }>();
 
@@ -74,7 +76,7 @@
             dialog.close();
             dispatch('done');
         } catch (e) {
-            errorMsg = '保存中にエラーが発生しました';
+            errorMsg = get(t)('common.error.generic');
         } finally {
             saving = false;
         }
@@ -87,11 +89,11 @@
 
 <dialog class="d2ps-dialog-root" bind:this={dialog}>
     <div class="d2ps-dialog">
-        <h3 class="d2ps-dialog__title">カテゴリを編集</h3>
+        <h3 class="d2ps-dialog__title">{$t('category.edit.title')}</h3>
 
         <!-- ファイル（タブ） -->
         <label class="d2ps-dialog__label">
-            <span>タブ（ファイル）</span>
+            <span>{$t('category.field.file')}</span>
             <div class="d2ps-dialog__row">
                 {#if !isNewFile}
                     <select class="d2ps-dialog__select" bind:value={fileId}>
@@ -104,20 +106,20 @@
                         on:click={() => {
                             isNewFile = true;
                             newFileName = '';
-                        }}>+ 新規</button
+                        }}>{$t('common.new')}</button
                     >
                 {:else}
                     <input
                         class="d2ps-dialog__input"
                         type="text"
-                        placeholder="新しいファイル名"
+                        placeholder={$t('category.field.newFileName')}
                         bind:value={newFileName}
                     />
                     <button
                         class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_PRIMARY} d2ps-dialog__new-btn"
                         on:click={() => {
                             isNewFile = false;
-                        }}>既存</button
+                        }}>{$t('common.existing')}</button
                     >
                 {/if}
             </div>
@@ -125,13 +127,13 @@
 
         <!-- カテゴリ名 -->
         <label class="d2ps-dialog__label">
-            <span>カテゴリ</span>
+            <span>{$t('category.field.name')}</span>
             <input class="d2ps-dialog__input" type="text" bind:value={categoryName} />
         </label>
 
         <!-- エラー・重複 -->
         {#if isDuplicate}
-            <p class="d2ps-dialog__error">同じカテゴリが存在します</p>
+            <p class="d2ps-dialog__error">{$t('category.error.duplicate')}</p>
         {/if}
         {#if errorMsg}
             <p class="d2ps-dialog__error">{errorMsg}</p>
@@ -144,11 +146,11 @@
                 on:click={handleSave}
                 disabled={!canSave}
             >
-                {saving ? '保存中...' : '保存'}
+                {saving ? $t('common.saving') : $t('common.save')}
             </button>
             <button
                 class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_SECONDARY}"
-                on:click={handleCancel}>キャンセル</button
+                on:click={handleCancel}>{$t('common.cancel')}</button
             >
         </div>
     </div>

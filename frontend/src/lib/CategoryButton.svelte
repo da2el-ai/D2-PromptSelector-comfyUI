@@ -1,6 +1,7 @@
 <script lang="ts">
     import { isEditMode } from '../stores/ui';
     import { Constants } from '../Constants';
+    import { t } from '../i18n';
 
     /** ボタンに表示するラベル */
     export let label: string;
@@ -28,7 +29,7 @@
 
 <span class="d2ps-btn-wrapper" style="width:100%">
     {#if $isEditMode && onDelete}
-        <button class="d2ps-btn d2ps-btn--delete" on:click={onDelete} title="削除">x</button>
+        <button class="d2ps-btn d2ps-btn--delete" on:click={onDelete} title={$t('common.delete')}>x</button>
     {/if}
     <button
         class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_SECONDARY} d2ps-btn d2ps-btn--random{prompt

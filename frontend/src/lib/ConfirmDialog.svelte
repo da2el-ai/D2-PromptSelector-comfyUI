@@ -1,12 +1,14 @@
 <script lang="ts">
+    import { get } from 'svelte/store';
     import { Constants } from '../Constants';
+    import { t } from '../i18n';
 
     let dialog: HTMLDialogElement;
 
     let title = '';
     let message = '';
-    let confirmLabel = 'OK';
-    let cancelLabel = 'キャンセル';
+    let confirmLabel = '';
+    let cancelLabel = '';
     let resolver: ((ok: boolean) => void) | null = null;
 
     type OpenOptions = {
@@ -18,10 +20,11 @@
 
     /** ダイアログを開いて、確認/キャンセルの結果を Promise<boolean> で返す */
     export function open(opts: OpenOptions): Promise<boolean> {
+        const translate = get(t);
         title = opts.title ?? '';
         message = opts.message;
-        confirmLabel = opts.confirmLabel ?? 'OK';
-        cancelLabel = opts.cancelLabel ?? 'キャンセル';
+        confirmLabel = opts.confirmLabel ?? translate('common.ok');
+        cancelLabel = opts.cancelLabel ?? translate('common.cancel');
         return new Promise<boolean>((resolve) => {
             resolver = resolve;
             dialog.showModal();
