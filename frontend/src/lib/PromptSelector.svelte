@@ -194,6 +194,8 @@
     bind:this={sortDialog}
     onEditCategory={handleEditCategory}
     onEditItem={handleEditTag}
+    onDeleteCategory={handleDeleteCategory}
+    onDeleteItem={handleDeleteItem}
 />
 
 <!-- 共通の確認ダイアログ -->

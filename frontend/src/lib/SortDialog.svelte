@@ -18,12 +18,10 @@
 
     // 編集ダイアログ呼び出し用のハンドラ（親の PromptSelector から注入）
     export let onEditCategory: (fileId: string, categoryId: string) => void = () => {};
-    export let onEditItem: (
-        fileId: string,
-        categoryId: string,
-        name: string,
-        prompt: string
-    ) => void = () => {};
+    export let onEditItem: (fileId: string, categoryId: string, name: string, prompt: string) => void = () => {};
+    // 削除ハンドラ（親の PromptSelector から注入。内部で ConfirmDialog → API → fetchTags）
+    export let onDeleteCategory: (fileId: string, categoryId: string) => void = () => {};
+    export let onDeleteItem: (fileId: string, categoryId: string, name: string) => void = () => {};
 
     let dialog: HTMLDialogElement;
 
@@ -378,10 +376,10 @@
                         on:click={() => toggleFile(file.fileId)}
                         aria-label={expandedFiles.has(file.fileId) ? '折り畳み' : '展開'}
                     >
-                        {expandedFiles.has(file.fileId) ? '▼' : '▶'}
+                        {expandedFiles.has(file.fileId) ? '▼' : '▷'}
                     </button>
                     <span class="d2ps-sort-row__label">{file.fileId}</span>
-                    <span class="d2ps-sort-row__close">x</span>
+                    <!-- ファイル削除は今回スコープ外（sort_spec.md §7）のため close ボタンなし -->
                     <span
                         class="d2ps-sort-row__drag-handle drag-handle w-3"
                         role="button"
@@ -409,7 +407,7 @@
                                 on:click={() => toggleCategory(file.fileId, category.categoryId)}
                                 aria-label={expandedCategories.has(catKey) ? '折り畳み' : '展開'}
                             >
-                                {expandedCategories.has(catKey) ? '▼' : '▶'}
+                                {expandedCategories.has(catKey) ? '▼' : '▷'}
                             </button>
                             <button
                                 type="button"
@@ -418,7 +416,14 @@
                             >
                                 {category.categoryId}
                             </button>
-                            <span class="d2ps-sort-row__close">x</span>
+                            <button
+                                type="button"
+                                class="d2ps-sort-row__close"
+                                aria-label="カテゴリを削除"
+                                on:click={() => onDeleteCategory(file.fileId, category.categoryId)}
+                            >
+                                x
+                            </button>
                             <span
                                 class="d2ps-sort-row__drag-handle drag-handle w-3"
                                 role="button"
@@ -428,7 +433,6 @@
                                 on:dragstart={(e) => handleDragStart(catInfo, e)}
                                 on:dragend={handleDragEnd}
                             ></span>
-                            <!-- 削除ボタンは段階6で追加 -->
                         </div>
 
                         {#if expandedCategories.has(catKey)}
@@ -446,16 +450,18 @@
                                         type="button"
                                         class="d2ps-sort-row__label d2ps-sort-row__label--clickable"
                                         on:click={() =>
-                                            onEditItem(
-                                                file.fileId,
-                                                category.categoryId,
-                                                item.name,
-                                                item.prompt
-                                            )}
+                                            onEditItem(file.fileId, category.categoryId, item.name, item.prompt)}
                                     >
                                         {item.name}
                                     </button>
-                                    <span class="d2ps-sort-row__close">x</span>
+                                    <button
+                                        type="button"
+                                        class="d2ps-sort-row__close"
+                                        aria-label="タグを削除"
+                                        on:click={() => onDeleteItem(file.fileId, category.categoryId, item.name)}
+                                    >
+                                        x
+                                    </button>
                                     <span
                                         class="d2ps-sort-row__drag-handle drag-handle w-3"
                                         role="button"
@@ -465,7 +471,6 @@
                                         on:dragstart={(e) => handleDragStart(itemInfo, e)}
                                         on:dragend={handleDragEnd}
                                     ></span>
-                                    <!-- 削除ボタンは段階6で追加 -->
                                 </div>
                             {/each}
                         {/if}

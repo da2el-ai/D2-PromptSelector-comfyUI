@@ -24,6 +24,7 @@
     .d2ps-sort-row__label {
         flex: 1;
         text-align: left;
+        padding-block: 0.2em;
     }
 
     // 編集可能なラベル（button 要素）を span と同じ見た目にリセット
@@ -35,7 +36,6 @@
         // font: inherit;
         // padding: 0;
         cursor: pointer;
-        padding-block: 0.2em;
 
         &:hover {
             color: var(--primary-background);
