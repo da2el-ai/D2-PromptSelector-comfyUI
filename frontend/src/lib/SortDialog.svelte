@@ -17,6 +17,7 @@
         | { type: 'item'; fileId: string; categoryId: string; sort: string[] };
 
     // 編集ダイアログ呼び出し用のハンドラ（親の PromptSelector から注入）
+    export let onEditFile: (fileId: string) => void = () => {};
     export let onEditCategory: (fileId: string, categoryId: string) => void = () => {};
     export let onEditItem: (fileId: string, categoryId: string, name: string, prompt: string) => void = () => {};
     // 削除ハンドラ（親の PromptSelector から注入。内部で ConfirmDialog → API → fetchTags）
@@ -332,7 +333,13 @@
                     >
                         {expandedFiles.has(file.fileId) ? '▼' : '▷'}
                     </button>
-                    <span class="d2ps-sort-row__label">{file.fileId}</span>
+                    <button
+                        type="button"
+                        class="d2ps-sort-row__label d2ps-sort-row__label--clickable"
+                        on:click={() => onEditFile(file.fileId)}
+                    >
+                        {file.fileId}
+                    </button>
                     <button
                         type="button"
                         class="d2ps-sort-row__close"

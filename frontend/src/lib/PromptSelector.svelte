@@ -12,6 +12,7 @@
     import SortDialog from './SortDialog.svelte';
     import ConfirmDialog from './ConfirmDialog.svelte';
     import FileDeleteConfirmDialog from './FileDeleteConfirmDialog.svelte';
+    import FileEditorDialog from './FileEditorDialog.svelte';
     import { insertTextToTarget, apiGet, apiPost, apiPostWithBackup } from '../utils';
     import { get } from 'svelte/store';
     import { targetTextArea, activeTabId } from '../stores/ui';
@@ -22,6 +23,7 @@
     let sortDialog: SortDialog;
     let confirmDialog: ConfirmDialog;
     let fileDeleteDialog: FileDeleteConfirmDialog;
+    let fileEditorDialog: FileEditorDialog;
 
     async function handleReload() {
         await fetchTags();
@@ -80,6 +82,18 @@
     /** カテゴリ編集ダイアログを開く */
     function handleEditCategory(fileId: string, categoryId: string) {
         categoryEditorDialog.openEdit(fileId, categoryId);
+    }
+
+    /** ファイル名編集ダイアログを開く */
+    function handleEditFile(fileId: string) {
+        fileEditorDialog.openEdit(fileId);
+    }
+
+    /** ファイル名変更完了：アクティブタブがリネームされていたら新しい ID に差し替える */
+    function handleFileRenamed(e: CustomEvent<{ oldId: string; newId: string }>) {
+        if (get(activeTabId) === e.detail.oldId) {
+            activeTabId.set(e.detail.newId);
+        }
     }
 
     /** タグ削除：確認ダイアログ → API */
@@ -217,6 +231,7 @@
     bind:this={sortDialog}
     onEditCategory={handleEditCategory}
     onEditItem={handleEditTag}
+    onEditFile={handleEditFile}
     onDeleteCategory={handleDeleteCategory}
     onDeleteItem={handleDeleteItem}
     onDeleteFile={handleDeleteFile}
@@ -227,6 +242,9 @@
 
 <!-- ファイル削除の強確認ダイアログ -->
 <FileDeleteConfirmDialog bind:this={fileDeleteDialog} />
+
+<!-- ファイル名変更ダイアログ -->
+<FileEditorDialog bind:this={fileEditorDialog} on:done={handleFileRenamed} />
 
 <style>
     :global(.d2ps-btn--active) {

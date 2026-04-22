@@ -123,6 +123,23 @@ async def route_d2_ps_edit_category(request):
 
 
 """
+ファイル名変更
+"""
+@PromptServer.instance.routes.post("/D2_prompt-selector/edit_file")
+async def route_d2_ps_edit_file(request):
+    try:
+        body = await request.json()
+        TagsUtil.create_backup(_backup_count_from(body))
+        result = TagsUtil.edit_file(
+            file=body["file"],
+            new_file_name=body["new_file_name"],
+        )
+        return web.json_response(result)
+    except Exception as e:
+        return web.json_response({"error": str(e)}, status=500)
+
+
+"""
 ファイル順を更新（__config__.yml の sort を書き換え）
 """
 @PromptServer.instance.routes.post("/D2_prompt-selector/reorder_files")
@@ -709,6 +726,53 @@ class TagsUtil:
             sort_list = config.get("sort") or []
             if stem in sort_list:
                 sort_list.remove(stem)
+                config["sort"] = sort_list
+                config_path.write_text(
+                    yaml.dump(config, allow_unicode=True, sort_keys=False),
+                    encoding="utf-8",
+                )
+
+        return {"success": True}
+
+    @classmethod
+    def edit_file(cls, file: str, new_file_name: str) -> dict:
+        """
+        ファイル名を変更する。
+        - tags/{file}.yml を tags/{new_file_name}.yml にリネーム
+        - __config__.yml の sort リスト内でも旧名→新名に置換（順序は維持）
+        - new_file_name が不正（空・予約名・パス区切り等）: {"error": "invalid_file_name"}
+        - file が存在しない: {"error": "not_found"}
+        - 変更先が既に存在する（自分以外）: {"error": "duplicate"}
+        - 旧名 == 新名: 何もせず {"success": True}
+        """
+        old_stem = (file or "").strip()
+        new_stem = (new_file_name or "").strip()
+
+        if not new_stem or new_stem == "__config__":
+            return {"error": "invalid_file_name"}
+        if any(ch in new_stem for ch in ('/', '\\', ':', '*', '?', '"', '<', '>', '|')):
+            return {"error": "invalid_file_name"}
+
+        if old_stem == new_stem:
+            return {"success": True}
+
+        old_path = cls.TAGS_DIR / f"{old_stem}.yml"
+        new_path = cls.TAGS_DIR / f"{new_stem}.yml"
+
+        if not old_path.exists():
+            return {"error": "not_found"}
+        if new_path.exists():
+            return {"error": "duplicate"}
+
+        old_path.rename(new_path)
+
+        # __config__.yml の sort リストで旧名を新名に置換（順序保持）
+        config_path = cls.TAGS_DIR / "__config__.yml"
+        if config_path.exists():
+            config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+            sort_list = config.get("sort") or []
+            if old_stem in sort_list:
+                sort_list = [new_stem if s == old_stem else s for s in sort_list]
                 config["sort"] = sort_list
                 config_path.write_text(
                     yaml.dump(config, allow_unicode=True, sort_keys=False),
