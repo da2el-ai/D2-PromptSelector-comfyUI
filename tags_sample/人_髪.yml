@@ -12,14 +12,12 @@
   銀髪: silver hair
   灰髪: gray hair
   白髪: white hair
-
 髪複数色:
   マルチカラー: multicolored hair
   メッシュ: streaked hair
   グラデーション: gradient hair
   インナーカラー: colored inner hair
   スプリットカラー: split-color hair
-
 長さ:
   ベリーショート: very short hair
   ショートヘア: short hair
@@ -27,59 +25,52 @@
   ロングヘアー: long hair
   超ロングヘアー: very long hair
   超超ロングヘアー: absurdly long hair
-
 種類:
   くせ毛: messy hair
   直毛: straight hair
   ウェーブヘア: wavy hair
   外ハネ: flipped hair
   非対称: asymmetrical hair
-
-髪型:
-  ポニーテール:
-    ポニーテール: ponytail
-    ハイポニーテール: high ponytail
-    ローポニーテール: low ponytail
-    フロントポニーテール: front ponytail
-    サイドポニーテール: side ponytail
-    スプリットポニーテール: split ponytail
-    畳みポニーテール: folded ponytail
-    ショートポニーテール: short ponytail
-
-  ツインテール:
-    ツインテール: twintails
-    ローツインテール: low twintails
-    ショートツインテール: short twintails
-    トリプルテール: tri tails
-    クアッドテール: quad tails
-
-  その他:
-    三つ編み: braid
-    ハーフアップ: half updo
-    ワンサイドアップ: one side up
-    ツーサイドアップ: two side up
-    マルチタイヘアー: multi-tied hair
-    頭頂部結び: topknot
-    巻き毛: curly hair
-    縦ロール: drill hair
-    ツイン縦ロール: twin drills
-    リングレット: ringlets
-    弓型髪: bow-shaped hair
-    お団子頭: hair bun
-    輪っか髪: hair rings
-    ドレッドヘア: dreadlocks
-
+髪型 > ポニーテール:
+  ポニーテール: ponytail
+  ハイポニーテール: high ponytail
+  ローポニーテール: low ponytail
+  フロントポニーテール: front ponytail
+  サイドポニーテール: side ponytail
+  スプリットポニーテール: split ponytail
+  畳みポニーテール: folded ponytail
+  ショートポニーテール: short ponytail
+髪型 > ツインテール:
+  ツインテール: twintails
+  ローツインテール: low twintails
+  ショートツインテール: short twintails
+  トリプルテール: tri tails
+  クアッドテール: quad tails
+髪型 > その他:
+  三つ編み: braid
+  ハーフアップ: half updo
+  ワンサイドアップ: one side up
+  ツーサイドアップ: two side up
+  マルチタイヘアー: multi-tied hair
+  頭頂部結び: topknot
+  巻き毛: curly hair
+  縦ロール: drill hair
+  ツイン縦ロール: twin drills
+  リングレット: ringlets
+  弓型髪: bow-shaped hair
+  お団子頭: hair bun
+  輪っか髪: hair rings
+  ドレッドヘア: dreadlocks
 前髪:
   パッツン: blunt bangs
   非対称: asymmetrical bangs
-  両目隠れ:  hair over eyes
+  両目隠れ: hair over eyes
   片目隠れ: hair over one eye
   センター分け: parted bangs
   センター分け(ゆるめ): swept bangs
   目の間: hair between eyes
   インテーク: hair intakes
   触角: sidelocks
-
 他:
   横髪: hair flaps
   アホ毛: ahoge

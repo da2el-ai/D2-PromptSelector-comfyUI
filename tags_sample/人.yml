@@ -1,9 +1,14 @@
 対象:
-  - 1girl
-  - 1boy
-  - 1other
-  - multiple girls
-
+  1girl: 1girl
+  1boy: 1boy
+  1other: 1other
+  multiple girls: multiple girls
+肌の色:
+  白: white skin
+  色白: pale skin
+  褐色: dark skin
+  明るい: shiny skin
+  有色: colored skin
 年齢:
   ティーン: teen
   ローティーン: early teen
@@ -14,20 +19,11 @@
   幼児: toddler
   ロリ: loli
   ショタ: shota
-
-肌の色:
-  白: white skin
-  色白: pale skin
-  褐色: dark skin
-  明るい: shiny skin
-  有色: colored skin
-
 肌の装飾:
   日焼け: tan
   日焼け跡: tanlines
   入れ墨: tattoo
   油: oil
-
 体形:
   アスリート: athlete
   モデル: model
@@ -42,7 +38,6 @@
   筋肉質: muscular
   細ウェスト: narrow waist
   大きな尻: wide hips
-
 胸:
   まな板: flat chest
   貧乳: small breasts
@@ -50,14 +45,12 @@
   巨乳: large breasts
   爆乳: huge breasts
   垂れ乳: hanging breasts
-
 体のパーツ:
   腋: armpits
   鎖骨: collarbone
   へそ: navel
   尻: ass
   太もも: thighs
-
 翼:
   翼: wings
   コウモリの翼: bat wings

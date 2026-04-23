@@ -1,29 +1,26 @@
-目:
-  色:
-    黒: black eyes
-    白: white eyes
-    赤: red eyes
-    青: blue eyes
-    緑: green eyes
-    紫: purple eyes
-    銀色: silver eyes
-    金色: golden eyes
-    灰色: gray eyes
-    水色: aqua eyes
-    茶色: brown eyes
-    ピンク: pink eyes
-    オレンジ: orange eyes
-    オッドアイ: heterochromia
-  状態:
-    半目: half-closed eyes
-    閉じた目: closed eyes
-
+目 > 色:
+  黒: black eyes
+  白: white eyes
+  赤: red eyes
+  青: blue eyes
+  緑: green eyes
+  紫: purple eyes
+  銀色: silver eyes
+  金色: golden eyes
+  灰色: gray eyes
+  水色: aqua eyes
+  茶色: brown eyes
+  ピンク: pink eyes
+  オレンジ: orange eyes
+  オッドアイ: heterochromia
+目 > 状態:
+  半目: half-closed eyes
+  閉じた目: closed eyes
 耳:
   エルフ耳: elf ears
   ケモミミ: animal ears
   ネコミミ: cat ears
   キツネ耳: fox ears
-
 表情:
   笑い: smile
   悲しい笑い: sad smile
@@ -60,7 +57,6 @@
   羞恥: embarrassed
   いたずら顔: naughty
   眠気: sleepy
-
 口:
   唇: lip
   開いた口: open mouth
