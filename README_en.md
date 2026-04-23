@@ -20,7 +20,7 @@ Ver.2 adds prompt editing features.
 - Auto-backup: Keeps up to 10 previous versions by default
 
 
-<video src="./img/prompt-selector.mp4" controls width="600"></video>
+![](img/prompt-selector.gif)
 
 ---
 

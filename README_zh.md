@@ -20,7 +20,7 @@ Ver.2 新增了提示詞的編輯功能。
 - 自動備份：預設保留最近 10 個版本
 
 
-<video src="./img/prompt-selector.mp4" controls width="600"></video>
+![](img/prompt-selector.gif)
 
 ---
 
@@ -216,12 +216,12 @@ sort:
 
 ![](img/settings_2.png)
 
-| 設定項目                         | 說明                                          |
-| -------------------------------- | --------------------------------------------- |
-| ShowButton Location              | 「PS」按鈕靠齊的畫面邊角位置                  |
-| ShowButton Horizontal Margin(px) | 距離畫面邊的 X 方向邊距                       |
-| ShowButton Vertical Margin(px)   | 距離畫面邊的 Y 方向邊距                       |
-| Backup Count                     | 備份保留數量（0–100，0 代表停用）             |
+| 設定項目                         | 說明                              |
+| -------------------------------- | --------------------------------- |
+| ShowButton Location              | 「PS」按鈕靠齊的畫面邊角位置      |
+| ShowButton Horizontal Margin(px) | 距離畫面邊的 X 方向邊距           |
+| ShowButton Vertical Margin(px)   | 距離畫面邊的 Y 方向邊距           |
+| Backup Count                     | 備份保留數量（0–100，0 代表停用） |
 
 ---
 

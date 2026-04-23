@@ -20,7 +20,7 @@ Ver.2でプロンプトの編集機能を追加しました。
 - 自動バックアップ：初期状態で10バージョンまで保存
 
 
-<video src="./img/prompt-selector.mp4" controls width="600"></video>
+![](img/prompt-selector.gif)
 
 ---
 
