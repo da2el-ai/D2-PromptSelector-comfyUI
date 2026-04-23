@@ -1,93 +1,231 @@
-
 # D2-PromptSelector-comfyUI
 
-<figure>
-    <a href="README_en.md">English</a> | <a href="README.md">日本語</a> | <a href="README_zh.md">繁体中文</a>
-</figure>
-
+[English](README_en.md) | [日本語](README.md) | [繁體中文](README_zh.md)
 
 登録したプロンプトをボタン一発で入力するユーティリティです。
 
-StableDiffusion webui A1111 用の機能拡張 [sd-d2-prompt-selector](https://github.com/da2el-ai/sd-d2-prompt-selector) をComfyUI用に作り変えたものです。
+Ver.2でプロンプトの編集機能を追加しました。
+
+![](img/main-panel.png)
+
+
+---
+
+## 主な機能
+
+- プロンプト簡単入力！：登録したプロンプトをボタンクリックで入力
+- 編集機能：プロンプトやカテゴリの追加・編集・削除・並べ替え
+- 検索機能：登録名・プロンプトをリアルタイムで検索
+- 多言語対応：日本語 / 英語 / 簡体中文 / 繁体中文に対応（ユーザーによる言語追加も可能）
+- 自動バックアップ：初期状態で10バージョンまで保存
+
+
+<video src="./img/prompt-selector.mp4" controls width="600"></video>
+
+---
+
+
+## Prompt Selector を開く
+
+画面左下の「PS」ボタンで開きます。
+
+![](img/ps-button2.png)
+
+
+## パネル操作
+
+![](img/normal-mode.png)
+
+
+### プロンプト
+
+プロンプトボタンをクリックすると **最後にアクティブだったテキストエリア** にプロンプトが入力されます。
+
+**【TIPS】** 右クリック（または Ctrl+クリック）で入力した後、PromptSelector のパネルを閉じます。
+
+### DynamicPrompt
+
+カテゴリ名のボタンをクリックすると、そのカテゴリに含まれるプロンプトが DynamicPrompt 構文で入力されます。
+
+例：<br>
+カテゴリ：`髪色`<br>
+登録プロンプト：`black hair` `blonde hair` `silver hair`<br>
+入力結果：`{ black hair, | blonde hair, | silver hair, }`
+
+
+### 検索
+
+🔍 タブを選択すると検索ができます。名前・プロンプトの両方に対して部分一致で検索されます。
+
+### 編集
+
+編集モードに入ります（後述）。
+
+### 再読み込み
+
+🔄 ボタンをクリックすると辞書ファイルを再読み込みし、プロンプト一覧を最新の状態に更新します。
+
+
+---
+
+## 編集モード
+
+コントローラーバー左端の「編集」ボタンで編集モードに入ります。「編集完了」で戻ります。
+
+![](img/edit-mode.png)
 
 
 
+### 編集機能の制限
 
-<figure>
-<img src="img/promptselector.png">
-</figure>
+初めて編集モードに入ろうとしたとき、登録内容が旧形式（多階層・配列混在）だった場合は変換確認ダイアログが表示されます。変換前の状態は `tags_migration/` フォルダへバックアップが作成されます。
 
-
-
-
-## 使い方
-
-画面左端の「PS」ボタンで開きます。
-
-<figure>
-    <img src="img/ps_button.png">
-</figure>
-
-タグボタンをクリックすると**最後にアクティブだったテキストエリア**に入力されます。
-
-**【TIPS】** 右クリックした場合はタグを入力した後、PromptSelectorのダイアログを閉じます。
-
-<figure>
-    <img src="img/tag_button.png">
-</figure>
-
-カテゴリーボタンをクリックすると DynamicPrompt構文で入力されます。
-
-<figure>
-    <img src="img/category_button.png">
-</figure>
-
-🔍ボタンをクリックすると検索ができます。
-
-<figure>
-    <img src="img/search.png">
-</figure>
+**変換前：**
+```
+hair:
+  color:        # カテゴリが多階層になっている
+    black: black hair,
+    blonde: blonde hair,
+hair style:
+  - ponytail    # 名前の無いリストになっている
+  - twintails
+```
+**変換後：**
+```
+hair > color:   # フラット化される
+  black: black hair,
+  blonde: blonde hair,
+hair style:
+  ponytail: ponytail    # 名前付きリストになる
+  twintails: twintails
+```
 
 
-## タグの追加
+### プロンプトの追加
 
-インストール先の `tags` フォルダのYAMLファイルを編集します。
-例：`ComfyUI/custom_nodes/d2-promptselector-comfyui/tags`
+編集モード中、「＋ 追加」ボタンをクリックすると追加ダイアログが開き、以下を入力します。
 
-YAMLはただのテキストファイルなのでメモ帳アプリなどで編集可能です。
-個人的にはVisualStudioCodeがオススメです。
+- タブ（ファイル）：既存から選択 or 新規作成
+- カテゴリ：既存から選択 or 新規作成
+- 名前（表示名）
+- プロンプト（複数行対応）
 
-YAMLファイルを追加した時は `__config__.yml` を編集する必要があります。
-`ポーズ.yml` を追加したら下記のようになります。順番は任意に変更できます。
+### プロンプトの編集・削除
+
+編集モード中、プロンプトボタンをクリックすると編集ダイアログが開きます。各プロンプトの左に表示される × で削除できます。
+
+### カテゴリの編集・削除
+
+編集モード中、カテゴリ名のボタンをクリックすると編集ダイアログが開き、リネームや別ファイルへの移動ができます。カテゴリ名の左の × でカテゴリごと削除できます（含まれるプロンプトも全て削除）。
+
+### ファイル削除
+
+編集モード中、各タブの左の × ボタンでファイルを削除できます。削除時は確認ダイアログでファイル名を正確に入力する必要があります（誤操作防止）。
+
+ファイル名の変更は後述する並び順ダイアログで行えます。
+
+### 並び順ダイアログ
+
+編集モード中、「並び順」ボタンでツリービューのダイアログが開きます。
+
+![](img/sort.png)
+
+
+- ファイル → カテゴリ → プロンプトの 3 階層をツリー表示
+- ラベルをクリックすると編集ダイアログを表示
+- `⋮⋮` をドラッグして並び替え
+- `x` をクリックすると削除
+
+---
+
+## 多言語対応
+
+D2 Prompt Selector は標準で下記の言語に対応しています。
+
+| 言語     | コード  |
+| -------- | ------- |
+| 日本語   | `ja`    |
+| 英語     | `en`    |
+| 簡体中文 | `zh`    |
+| 繁体中文 | `zh-TW` |
+
+ComfyUI の Settings > Comfy > Locale で選択した言語が反映されます。
+
+### ユーザーによる言語追加
+
+`D2-PromptSelector-comfyUI/web/locales/` フォルダに任意の言語コードで JSON ファイルを追加することで行えます。
+
+例：韓国語 → `ko.json`
+
+既存の JSON ファイルをコピーして翻訳してください。
+
+翻訳テキストが記載されていない場合は英語が表示されます。
+
+---
+
+## バックアップ
+
+書き込み系の操作（追加・編集・削除・ファイル名変更）を行う直前に `tags_bak_YYYYMMDD_HHMMSS/` フォルダへ `tags/` 全体のスナップショットが自動保存されます。
+
+- 保持件数は設定 **Backup Count** で変更可能（デフォルト 10、最大 100、0 で無効）
+- 件数を超えた古いバックアップは自動削除されます
+- 並び順変更（ドラッグ&ドロップ）ではバックアップを作成しません
+- マイグレーション（旧形式 → 新形式）は専用の `tags_migration/` フォルダに保存されます（ローテーション対象外）
+
+---
+
+## ファイルの直接編集
+
+インストール先の `tags/` フォルダの YAML ファイルを直接編集することもできます。<br>
+例：`ComfyUI/custom_nodes/D2-PromptSelector-comfyUI/tags/`
+
+### YAML 形式（1階層 dict）
+
+```yaml
+対象:
+    1girl: 1girl
+    1boy: 1boy
+
+年齢:
+    ティーン: teen
+    ローティーン: early teen
+```
+
+- 各カテゴリは `名前: プロンプト` の辞書形式
+- 2階層以上のネスト・配列形式は非対応（旧形式のファイルは初回編集時に変換ダイアログが表示されます）
+
+### ファイルの追加
+
+新しい YAML ファイルを `tags/` に追加した後、`__config__.yml` の `sort` に追記します。順番は任意に変更できます。
 
 ```yaml:__config__.yml
 sort:
-  - 人
-  - 人_顔
-  - 人_髪
-  - ポーズ
+    - 人
+    - 人_顔
+    - 人_髪
+    - ポーズ
 ```
 
-🔄ボタンをクリックすると編集したタグが反映されます。
+編集後は 🔄 ボタンまたは ComfyUI のリロードで反映されます。
 
-<figure>
-    <img src="img/reload_button.png">
-</figure>
-
+---
 
 ## 設定
 
-「PS」ボタンの位置は Settings で指定できます。
+ComfyUI の Settings から以下が設定できます。
 
-<figure>
-    <img src="img/setting.png">
-</figure>
+![](img/settings_2.png)
 
-- ShowButton Vertical Margin(px)
-  - 画面端からのY座標
-- ShowButton Horizontal Margin(px)
-  - 画面端からのX座標
-- ShowButton Location
-  - 画面端の基準位置
+| 設定項目                         | 内容                                     |
+| -------------------------------- | ---------------------------------------- |
+| ShowButton Location              | 「PS」ボタンの画面端基準位置             |
+| ShowButton Horizontal Margin(px) | 画面端からの X 方向マージン              |
+| ShowButton Vertical Margin(px)   | 画面端からの Y 方向マージン              |
+| Backup Count                     | バックアップ保持件数（0〜100、0 で無効） |
 
+---
+
+## ライセンス
+
+MIT
 
