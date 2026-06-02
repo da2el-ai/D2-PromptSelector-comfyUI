@@ -8,7 +8,7 @@ from server import PromptServer
 
 
 # 書き込み API のボディから backup_count を取り出すデフォルト値
-# フロントエンドが未指定の場合のフォールバック（SPEC.md §4.5 に従い 10 段階）
+# フロントエンドが未指定の場合のフォールバック（update_spec.md §4.5 に従い 10 段階）
 DEFAULT_BACKUP_COUNT = 10
 
 
