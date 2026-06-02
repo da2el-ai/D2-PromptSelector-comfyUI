@@ -11,12 +11,15 @@ from server import PromptServer
 from aiohttp import web
 from .nodes import tags
 from .nodes.utils import copy_if_empty
+from .nodes.nodes import comfy_entrypoint
 
 WEB_DIRECTORY = "./web"
-NODE_CLASS_MAPPINGS = {}
-NODE_DISPLAY_NAME_MAPPINGS = []
 
-__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
+# ノードは V3 スキーマ（comfy_entrypoint / ComfyExtension）で登録する。
+# ComfyUI のローダーは NODE_CLASS_MAPPINGS 属性があるとそちらを優先し
+# comfy_entrypoint を無視する（nodes.py の load 分岐は elif）ため、
+# NODE_CLASS_MAPPINGS はあえて定義しない。
+__all__ = ["WEB_DIRECTORY", "comfy_entrypoint"]
 
 
 
