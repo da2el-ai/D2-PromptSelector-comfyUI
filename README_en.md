@@ -2,226 +2,213 @@
 
 [English](README_en.md) | [日本語](README.md) | [繁體中文](README_zh.md)
 
-A utility that lets you insert registered prompts with a single button click.
+A utility for inserting registered prompts with a single button click.
 
 Ver.2 adds prompt editing features.
 
-![](img/main-panel.png)
+![](docs/img/main-panel.png)
 
 
 ---
 
 ## Features
 
-- Quick prompt input: Insert registered prompts with a single click
-- Editing: Add, edit, delete, and reorder prompts and categories
-- Search: Real-time search across display names and prompts
-- Multi-language: Japanese / English / Simplified Chinese / Traditional Chinese (users can add more)
-- Auto-backup: Keeps up to 10 previous versions by default
+- **Easy prompt input:** Insert a registered prompt with a button click
+- **Editing:** Add, edit, delete, and reorder prompts and categories
+- **Search:** Real-time search across names and prompts
+- **Multilingual:** Japanese / English / Simplified Chinese / Traditional Chinese (users can add languages)
+- **Auto backup:** Keeps up to 10 versions by default
 
-
-![](img/prompt-selector.gif)
+![](docs/img/prompt-selector.gif)
 
 ---
 
 
-## Opening the Prompt Selector
+## Opening Prompt Selector
 
-Click the "PS" button at the bottom-left of the screen.
+Open it with the "PS" button at the bottom-left of the screen.
 
-![](img/ps-button2.png)
+![](docs/img/ps-button2.png)
 
 
-## Panel controls
+## Panel operations
 
-![](img/normal-mode.png)
+![](docs/img/normal-mode.png)
 
 
 ### Prompt
 
-Clicking a prompt button inserts the prompt into the **last active text area**.
+Clicking a prompt button inserts the prompt into the **text area that was last active**.
 
-**[TIP]** Right-click (or Ctrl+click) to insert the prompt and then close the Prompt Selector panel.
+>【TIP】 Right-click (or Ctrl+click) inserts the prompt and then closes the Prompt Selector panel.
 
 ### DynamicPrompt
 
-Clicking a category name button inserts all prompts in that category using DynamicPrompt syntax.
+Clicking a category-name button inserts every prompt in that category using DynamicPrompt syntax.
 
 Example:<br>
-Category: `Hair color`<br>
+Category: `hair color`<br>
 Registered prompts: `black hair` `blonde hair` `silver hair`<br>
 Result: `{ black hair, | blonde hair, | silver hair, }`
 
+※ To use DynamicPrompt syntax, you need a custom node such as [comfyui-dynamicprompts](https://github.com/adieyal/comfyui-dynamicprompts).
+
+### Switching files (tabs)
+
+Each prompt file is a tab.<br>
+You can add tabs by adding files in the edit mode described below.
 
 ### Search
 
-Select the 🔍 tab to search. Both the display name and the prompt text are searched with partial matching.
+Select the 🔍 tab to search. Both names and prompts are matched by partial match.
 
 ### Edit
 
-Enters edit mode (see below).
+Enters edit mode (described below).
 
 ### Reload
 
-Clicking the 🔄 button reloads the dictionary files and refreshes the prompt list.
+Click the 🔄 button to reload the prompt files and refresh the prompt list to the latest state.
 
 
 ---
 
 ## Edit mode
 
-Click the "Edit" button on the left of the control bar to enter edit mode. Click "Done" to leave it.
+Enter edit mode with the "Edit" button at the left end of the controller bar. Use "Done" to return.
 
-![](img/edit-mode.png)
+![](docs/img/edit-mode.png)
 
 
 
-### Limitation before editing
+### Adding a prompt
 
-The first time you try to enter edit mode, if the registered data is in the old format (nested levels / mixed arrays), a conversion confirmation dialog is shown. A backup of the pre-conversion state is written to the `tags_migration/` folder.
+In edit mode, clicking the "+ Add" button opens the add dialog, where you enter:
 
-**Before:**
+- Tab (file): choose an existing one or create a new one
+- Category: choose an existing one or create a new one
+- Name (display name)
+- Prompt (multi-line supported)
+
+### Editing / deleting a prompt
+
+In edit mode, clicking a prompt button opens the edit dialog. The `×` shown to the left of each prompt deletes it.
+
+### Editing / deleting a category
+
+In edit mode, clicking a category-name button opens the edit dialog, where you can rename it or move it to another file. The `×` to the left of the category name deletes the whole category (all contained prompts are deleted too).
+
+### Deleting a file
+
+In edit mode, the `×` button to the left of each tab deletes the file. When deleting, you must type the file name exactly in the confirmation dialog (to prevent mistakes).
+
+Renaming a file is done in the sort-order dialog described below.
+
+### Sort-order dialog
+
+In edit mode, the "Sort" button opens a tree-view dialog.
+
+![](docs/img/sort.png)
+
+
+- Displays the three levels File → Category → Prompt as a tree
+- Click a label to open the edit dialog
+- Drag `⋮⋮` to reorder
+- Click `x` to delete
+
+
+### For users of older versions: editing restriction
+
+The first time you try to enter edit mode, if a prompt file is in the old format (nested levels / mixed arrays), a conversion confirmation dialog is shown. The state before conversion is backed up to the `tags_migration/` folder.
+
+**Before conversion:**
 ```
 hair:
-  color:        # category is nested
+  color:        # category is multi-level
     black: black hair,
     blonde: blonde hair,
 hair style:
-  - ponytail    # unnamed list
+  - ponytail    # an unnamed list
   - twintails
 ```
-**After:**
+**After conversion:**
 ```
 hair > color:   # flattened
   black: black hair,
   blonde: blonde hair,
 hair style:
-  ponytail: ponytail    # named dictionary
+  ponytail: ponytail    # becomes a named list
   twintails: twintails
 ```
-
-
-### Adding a prompt
-
-In edit mode, click the "+ Add" button to open the Add dialog. Enter:
-
-- Tab (file): Choose existing or create new
-- Category: Choose existing or create new
-- Name (display name)
-- Prompt (multi-line supported)
-
-### Editing and deleting a prompt
-
-In edit mode, click any prompt button to open its edit dialog. The × on the left of each prompt deletes it.
-
-### Editing and deleting a category
-
-In edit mode, click a category name button to open its edit dialog and rename it or move it to another file. The × on the left of the category name deletes the entire category (all contained prompts are also deleted).
-
-### Deleting a file
-
-In edit mode, the × on the left of each tab deletes the file. A confirmation dialog requires you to type the file name exactly (to prevent accidental deletion).
-
-Renaming a file is done in the Sort Order dialog (described below).
-
-### Sort Order dialog
-
-In edit mode, click the "Sort" button to open a tree-view dialog.
-
-![](img/sort.png)
-
-
-- Tree view with 3 levels: File → Category → Prompt
-- Click a label to open its edit dialog
-- Drag the `⋮⋮` handle to reorder
-- Click `x` to delete
-
----
-
-## Multi-language support
-
-D2 Prompt Selector officially supports the following languages.
-
-| Language            | Code    |
-| ------------------- | ------- |
-| Japanese            | `ja`    |
-| English             | `en`    |
-| Simplified Chinese  | `zh`    |
-| Traditional Chinese | `zh-TW` |
-
-The language selected in ComfyUI's Settings > Comfy > Locale is applied automatically.
-
-### Adding your own language
-
-Add a JSON file with any language code to the `D2-PromptSelector-comfyUI/web/locales/` folder.
-
-Example: Korean → `ko.json`
-
-Copy an existing JSON file and translate it.
-
-If a key has no translation, the English text is shown as a fallback.
 
 ---
 
 ## Backup
 
-Before any write operation (add / edit / delete / rename), a snapshot of the entire `tags/` folder is automatically saved to `tags_bak_YYYYMMDD_HHMMSS/`.
+Immediately before any write operation (add / edit / delete / rename file), a snapshot of the entire `tags/` is automatically saved to a `tags_bak_YYYYMMDD_HHMMSS/` folder.
 
-- The number of kept backups is configurable via the **Backup Count** setting (default 10, max 100, 0 disables backups)
-- Older backups beyond the limit are removed automatically
-- Reordering (drag & drop) does not create backups
-- Migration (old format → new format) saves to the dedicated `tags_migration/` folder (outside the rotation)
+- The number of kept snapshots can be changed with the **Backup Count** setting (default 10, max 100, 0 to disable)
+- Old backups beyond the limit are deleted automatically
+- Reordering (drag & drop) does not create a backup
+- Migration (old format → new format) is saved to the dedicated `tags_migration/` folder (not subject to rotation)
 
 ---
 
-## Editing the files directly
+## Editing prompt files directly
 
-You can also edit the YAML files in the `tags/` folder directly.<br>
-Example: `ComfyUI/custom_nodes/D2-PromptSelector-comfyUI/tags/`
-
-### YAML format (single-level dict)
+You can also edit the prompt files (YAML format) directly.<br>
+The files are stored in `{ComfyUI install folder}/custom_nodes/D2-PromptSelector-comfyUI/tags/`.
 
 ```yaml
-subject:
+対象:
     1girl: 1girl
     1boy: 1boy
 
-age:
-    teen: teen
-    early_teen: early teen
+年齢:
+    ティーン: teen
+    ローティーン: early teen
 ```
 
-- Each category is a dictionary of `name: prompt`
-- Nesting two or more levels and list format are not supported (older files will show a conversion dialog on first edit)
+- Each category is a `name: prompt` dictionary
+- Names may contain non-alphanumeric characters
+- Nesting of two or more levels and array format are not supported (old-format files show a conversion dialog on first edit)
 
 ### Adding a file
 
-After adding a new YAML file to `tags/`, add its name to the `sort` list in `__config__.yml`. The order is arbitrary.
+After adding a new YAML file to `tags/`, append it to `sort` in `__config__.yml`.<br>
+The order can be changed freely.
 
-```yaml:__config__.yml
+```yaml
+# __config__.yml
 sort:
-    - people
-    - people_face
-    - people_hair
-    - pose
+    - 人
+    - 人_顔
+    - 人_髪
+    - ポーズ
 ```
 
-After editing, click the 🔄 button or reload ComfyUI to apply the changes.
+Changes take effect via the 🔄 button or by reloading ComfyUI.
 
 ---
 
 ## Settings
 
-The following options are available in ComfyUI's Settings.
+The following can be configured from ComfyUI's Settings.
 
-![](img/settings_2.png)
+![](docs/img/settings_2.png)
 
-| Setting                          | Description                                   |
-| -------------------------------- | --------------------------------------------- |
-| ShowButton Location              | Screen edge the "PS" button snaps to          |
-| ShowButton Horizontal Margin(px) | Horizontal margin from the screen edge        |
-| ShowButton Vertical Margin(px)   | Vertical margin from the screen edge          |
-| Backup Count                     | Number of backups to keep (0–100, 0 disables) |
+| Setting                          | Description                                       |
+| -------------------------------- | ------------------------------------------------- |
+| ShowButton Location              | Reference edge position of the "PS" button        |
+| ShowButton Horizontal Margin(px) | Horizontal (X) margin from the screen edge        |
+| ShowButton Vertical Margin(px)   | Vertical (Y) margin from the screen edge          |
+| Backup Count                     | Number of backups kept (0–100, 0 to disable)      |
+
+---
+
+## Multilingual support
+
+For supported languages and how to add your own, see [docs/i18n_en.md](docs/i18n_en.md).
 
 ---
 
