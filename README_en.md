@@ -154,6 +154,83 @@ Immediately before any write operation (add / edit / delete / rename file), a sn
 
 ---
 
+## D2 Prompt Selector text-conversion node
+
+![](docs/img/node.png)
+
+This node is for people who find it tedious to call up prompts from the panel.
+
+It detects special tokens in the input text, converts them into registered prompts, and outputs the result. **Instead of clicking buttons on the panel, you can assemble prompts inside the workflow.**
+
+- Converts `--{name}--` into the registered prompt
+- Converts `@@{category}@@` into the prompts of that category using DynamicPrompt syntax
+- Matching is exact. The delimiters `--` and `@@` can be changed via inputs (to avoid conflicts with other extensions)
+
+### Input
+
+| Input | Type | Description |
+| --- | --- | --- |
+| `string` | STRING | Prompt input<br>e.g. `1girl, --beautiful--, best quality` |
+| `delete_unmatch` | BOOLEAN | How to handle tokens that could not be converted<br>`True`: delete the token<br>`False`: keep the token as-is |
+| `delimiter` | STRING | Delimiter for normal-conversion tokens<br>default: `--` |
+| `dynamic_delimiter` | STRING | Delimiter for DynamicPrompt-conversion tokens<br>default: `@@` |
+
+### Output
+
+| Output | Type | Description |
+| --- | --- | --- |
+| `string` | STRING | The converted text |
+
+### Token format
+
+Entering `--{name}--` outputs the registered prompt.
+If multiple prompts are registered under the same name, you can pinpoint one with the full path `{tab}/{category}/{name}`.
+
+Assume the following file is registered:
+
+```yaml
+# bg.yml (tab name: bg)
+quality:
+    beautiful: Beautiful lighting, highly detailed environment
+place:
+    stream: nature, stream, rock, wood
+    classroom: classroom, window, curtain, desk, chair, chalkboard
+```
+
+```
+Input  : 1girl, solo, --beautiful--, best quality
+Output : 1girl, solo, Beautiful lighting, highly detailed environment, best quality
+```
+
+To pinpoint with a full path, write it as `--bg/quality/beautiful--`.
+
+Writing a category name as `@@{category}@@` outputs the prompts in that category using DynamicPrompt syntax.
+Likewise, if multiple categories share the same name, you can pinpoint one with the full path `{tab}/{category}`.
+
+```
+Input  : @@place@@
+Output : { nature, stream, rock, wood, | classroom, window, curtain, desk, chair, chalkboard, }
+```
+
+To pinpoint with a full path, write it as `@@bg/place@@`.
+
+### Format reference
+
+| Format | Conversion |
+| --- | --- |
+| `--name--` | Searches all tabs in order and converts to the prompt of the first matching name<br>e.g. `--stream--` |
+| `--tab or category/name--` | Searches within the specified tab. If not found, treats the first part as a category name and searches all tabs<br>e.g. `--bg/stream--` `--place/stream--` |
+| `--tab/category/name--` | Full-path specification of tab, category, and name<br>e.g. `--bg/place/stream--` |
+| `@@category@@` | Searches all tabs in order and outputs the first matching category in DynamicPrompt syntax<br>e.g. `@@place@@` |
+| `@@tab/category@@` | Full-path specification of tab and category<br>e.g. `@@bg/place@@` |
+
+- Searches follow the tab order (`sort` in `__config__.yml`) and convert using the first match
+- Matching is exact (`beautiful` does not match `beautiful2`)
+- Tokens that contain spaces (e.g. `-- bg / quality / beautiful --`) are not converted
+
+
+---
+
 ## Editing prompt files directly
 
 You can also edit the prompt files (YAML format) directly.<br>

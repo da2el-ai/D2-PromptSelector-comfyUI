@@ -154,6 +154,83 @@ hair style:
 
 ---
 
+## D2 Prompt Selector 文字轉換節點
+
+![](docs/img/node.png)
+
+這是為覺得從面板呼叫提示詞很麻煩的人所準備的節點。
+
+它會偵測輸入文字中的特殊標記，將其轉換成已登錄的提示詞並輸出。**不必在面板上點擊按鈕，即可在工作流程中組合提示詞。**
+
+- 將 `--{登錄名}--` 轉換為已登錄的提示詞
+- 以 `@@{分類名}@@` 將分類內的提示詞轉換為 DynamicPrompt 語法
+- 採完全相符比對。包圍符號 `--` `@@` 可透過輸入變更（用於避免與其他擴充功能衝突）
+
+### Input
+
+| 輸入 | 型別 | 說明 |
+| --- | --- | --- |
+| `string` | STRING | 提示詞輸入<br>範例：`1girl, --beautiful--, best quality` |
+| `delete_unmatch` | BOOLEAN | 無法轉換的標記的處理方式<br>`True`：刪除標記<br>`False`：保留標記原樣 |
+| `delimiter` | STRING | 一般轉換標記的包圍符號<br>初始值：`--` |
+| `dynamic_delimiter` | STRING | DynamicPrompt 轉換標記的包圍符號<br>初始值：`@@` |
+
+### Output
+
+| 輸出 | 型別 | 說明 |
+| --- | --- | --- |
+| `string` | STRING | 轉換後的文字 |
+
+### 提示詞指定格式
+
+輸入 `--{登錄名}--` 即可輸出已登錄的提示詞。
+若有多個以相同名稱登錄的提示詞，也可使用完整路徑 `{分頁名}/{分類名}/{登錄名}` 來指定。
+
+以下列檔案已登錄的情況為例：
+
+```yaml
+# bg.yml（分頁名：bg）
+quality:
+    beautiful: Beautiful lighting, highly detailed environment
+place:
+    stream: nature, stream, rock, wood
+    classroom: classroom, window, curtain, desk, chair, chalkboard
+```
+
+```
+輸入：1girl, solo, --beautiful--, best quality
+輸出：1girl, solo, Beautiful lighting, highly detailed environment, best quality
+```
+
+若要以完整路徑指定，可寫成 `--bg/quality/beautiful--`。
+
+將分類名稱寫成 `@@{分類名}@@`，即可將該分類內的提示詞以 DynamicPrompt 語法輸出。
+同樣地，若有多個相同名稱的分類，也可使用完整路徑 `{分頁名}/{分類名}` 來指定。
+
+```
+輸入：@@place@@
+輸出：{ nature, stream, rock, wood, | classroom, window, curtain, desk, chair, chalkboard, }
+```
+
+若要以完整路徑指定，可寫成 `@@bg/place@@`。
+
+### 標記方式一覽
+
+| 格式 | 轉換內容 |
+| --- | --- |
+| `--登錄名--` | 依序搜尋所有分頁，轉換為第一個相符登錄名的提示詞<br>範例：`--stream--` |
+| `--分頁 或 分類/登錄名--` | 在指定分頁內搜尋。找不到時則視為分類名稱並搜尋所有分頁<br>範例：`--bg/stream--` `--place/stream--` |
+| `--分頁/分類/登錄名--` | 以完整路徑指定分頁・分類・登錄名<br>範例：`--bg/place/stream--` |
+| `@@分類@@` | 依序搜尋所有分頁，將第一個相符的分類以 DynamicPrompt 語法輸出<br>範例：`@@place@@` |
+| `@@分頁/分類@@` | 以完整路徑指定分頁・分類<br>範例：`@@bg/place@@` |
+
+- 搜尋會依分頁順序（`__config__.yml` 的 `sort`）進行，並以第一個相符項目轉換
+- 採完全相符（`beautiful` 不會與 `beautiful2` 相符）
+- 含有空格的標記（範例 `-- bg / quality / beautiful --`）不會被轉換
+
+
+---
+
 ## 直接編輯提示詞檔案
 
 你也可以直接編輯提示詞檔案（YAML 格式）。<br>
