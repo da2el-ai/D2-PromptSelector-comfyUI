@@ -2,7 +2,7 @@
 description = "A utility that allows you to input registered prompts with a single button click."
 license = {file = "LICENSE"}
 name = "d2-promptselector-comfyui"
-version = "3.0.0"
+version = "3.0.1"
 
 [project.urls]
 Repository = "https://github.com/da2el-ai/D2-PromptSelector-comfyUI"
@@ -10,5 +10,5 @@ Repository = "https://github.com/da2el-ai/D2-PromptSelector-comfyUI"
 
 [tool.comfy]
 DisplayName = "D2-PromptSelector-ComfyUI"
-Icon = ""
+Icon = "https://raw.githubusercontent.com/da2el-ai/D2-nodes-ComfyUI/refs/heads/main/docs/img/cover.jpg"
 PublisherId = "da2el"
