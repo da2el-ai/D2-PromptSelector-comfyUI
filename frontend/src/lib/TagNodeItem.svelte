@@ -10,6 +10,8 @@
     // 編集・削除コールバック（リーフノードのみ有効）
     export let onEditItem: ((name: string, prompt: string) => void) | undefined = undefined;
     export let onDeleteItem: ((name: string) => void) | undefined = undefined;
+    // サンプルビュー更新（lock=false: ホバー / lock=true: ピン固定）
+    export let onSample: ((item: TagItem, lock: boolean) => void) | undefined = undefined;
 </script>
 
 {#if item.children}
@@ -23,6 +25,7 @@
                     {onClickTag}
                     onEditItem={child.children ? undefined : onEditItem}
                     onDeleteItem={child.children ? undefined : onDeleteItem}
+                    {onSample}
                 />
             {/each}
         </div>
@@ -35,10 +38,16 @@
             prompt={item.prompt}
             onClickTag={(_p, _c) => onEditItem(item.name, item.prompt)}
             {onDeleteItem}
+            onHover={onSample ? () => onSample(item, false) : undefined}
+            onPin={onSample ? () => onSample(item, true) : undefined}
         />
     {:else}
-        <TagButton name={item.name} prompt={item.prompt} {onClickTag} />
+        <TagButton
+            name={item.name}
+            prompt={item.prompt}
+            {onClickTag}
+            onHover={onSample ? () => onSample(item, false) : undefined}
+            onPin={onSample ? () => onSample(item, true) : undefined}
+        />
     {/if}
 {/if}
-
-

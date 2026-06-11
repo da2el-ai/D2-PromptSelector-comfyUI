@@ -1,0 +1,77 @@
+// サンプルビュー（パネル右側）
+.d2ps-sample {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto max-content 1fr;
+    gap: 8px;
+    padding: 8px;
+    border: solid 1px var(--p-tieredmenu-separator-border-color);
+    border-radius: var(--block-radius, 8px);
+    transition: .2s;
+    overflow: hidden;
+
+    &[data-is-pinned="true"] {
+        background-image: linear-gradient(to bottom, #098ce921, transparent);
+    }
+}
+
+.d2ps-sample__header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.d2ps-sample__spacer {
+    flex: 1;
+}
+
+.d2ps-sample__btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1em;
+    line-height: 1;
+    padding: 4px;
+    border-radius: 4px;
+
+    &:hover {
+        background-color: var(--secondary-background-hover);
+    }
+}
+
+.d2ps-sample__image {
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+
+    img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+}
+
+.d2ps-sample__placeholder {
+    width: 100%;
+    height: 100%;
+    border: dashed 1px var(--p-tieredmenu-separator-border-color);
+    border-radius: 4px;
+    opacity: 0.4;
+}
+
+.d2ps-sample__prompt {
+    overflow: auto;
+    padding: 6px 8px;
+    background-color: var(--p-inputtext-background);
+    border-radius: 4px;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+.d2ps-sample__empty {
+    color: var(--descrip-text);
+}

@@ -10,6 +10,8 @@
     export let onEditCategory: (categoryId: string) => void;
     export let onDeleteItem: (categoryId: string, itemName: string) => void;
     export let onDeleteCategory: (categoryId: string) => void;
+    // サンプルビュー更新（categoryId を補ってさらに上位へ渡す）
+    export let onSample: (categoryId: string, item: TagItem, lock: boolean) => void;
 
     $: isActive = $activeTabId === file.fileId;
 
@@ -48,6 +50,7 @@
                             ? (name, prompt) => onEditTag(category.categoryId, name, prompt)
                             : undefined}
                         onDeleteItem={$isEditMode ? (name) => onDeleteItem(category.categoryId, name) : undefined}
+                        onSample={(it, lock) => onSample(category.categoryId, it, lock)}
                     />
                 {/each}
             </div>

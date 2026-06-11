@@ -5,7 +5,7 @@
     import TabNavi from './TabNavi.svelte';
     import CategoryView from './CategoryView.svelte';
     import SearchView from './SearchView.svelte';
-    import ToolTip from './ToolTip.svelte';
+    import SampleView from './SampleView.svelte';
     import MigrationDialog from './MigrationDialog.svelte';
     import TagEditorDialog from './TagEditorDialog.svelte';
     import CategoryEditorDialog from './CategoryEditorDialog.svelte';
@@ -15,7 +15,9 @@
     import FileEditorDialog from './FileEditorDialog.svelte';
     import { insertTextToTarget, apiGet, apiPost, apiPostWithBackup } from '../utils';
     import { get } from 'svelte/store';
-    import { targetTextArea, activeTabId } from '../stores/ui';
+    import { targetTextArea, activeTabId, sampleItem, isSampleLocked } from '../stores/ui';
+    import type { SampleItem } from '../stores/ui';
+    import type { TagItem } from '../types';
     import { t } from '../i18n';
 
     let migrationDialog: MigrationDialog;
@@ -42,6 +44,25 @@
         if (closePanel) {
             isPanelVisible.set(false);
         }
+    }
+
+    /** サンプルビュー更新：ホバー（lock=false）／ピン固定（lock=true）。fileId を注入 */
+    function handleSample(fileId: string, categoryId: string, item: TagItem, lock: boolean) {
+        // ホバーは固定中なら無視。ピンは常に切り替え（固定したまま対象を変更）
+        if (!lock && get(isSampleLocked)) return;
+        sampleItem.set({
+            fileId,
+            categoryId,
+            name: item.name,
+            prompt: item.prompt,
+            image: item.image,
+        });
+        if (lock) isSampleLocked.set(true);
+    }
+
+    /** サンプルビューの編集ボタン：表示中の項目を編集ダイアログで開く（編集モード外でも可） */
+    function handleEditFromSample(item: SampleItem) {
+        editorDialog.openEdit(item.fileId, item.categoryId, item.name, item.prompt);
     }
 
     /** 編集ボタン押下：マイグレーション確認 → 編集モード ON */
@@ -194,7 +215,7 @@
             >
         </div>
 
-        <!-- タグラッパー -->
+        <!-- タグラッパー（左：ボタンエリア / 右：サンプルビュー） -->
         <div class="d2ps-tag-wrapper">
             <div class="d2ps-tag-container">
                 <!-- 全ファイル（常にDOM、display で表示切替） -->
@@ -206,17 +227,23 @@
                         onEditCategory={(catId) => handleEditCategory(file.fileId, catId)}
                         onDeleteItem={(catId, name) => handleDeleteItem(file.fileId, catId, name)}
                         onDeleteCategory={(catId) => handleDeleteCategory(file.fileId, catId)}
+                        onSample={(catId, item, lock) => handleSample(file.fileId, catId, item, lock)}
                     />
                 {/each}
                 <!-- 検索（常にDOM、display で表示切替） -->
-                <SearchView onClickTag={handleClickTag} onEditTag={handleEditTag} onDeleteItem={handleDeleteItem} />
+                <SearchView
+                    onClickTag={handleClickTag}
+                    onEditTag={handleEditTag}
+                    onDeleteItem={handleDeleteItem}
+                    onSample={(hit, lock) => handleSample(hit.fileId, hit.categoryId, hit, lock)}
+                />
                 <!-- タブナビ（タグコンテナの最後） -->
                 <TabNavi onDeleteFile={handleDeleteFile} />
             </div>
-        </div>
 
-        <!-- ツールチップ -->
-        <ToolTip />
+            <!-- サンプルビュー（右側） -->
+            <SampleView onEdit={handleEditFromSample} />
+        </div>
     </div>
 {/if}
 

@@ -9,13 +9,15 @@
     export let onClickTag: (prompt: string, closePanel: boolean) => void;
     export let onEditTag: (fileId: string, categoryId: string, name: string, prompt: string) => void;
     export let onDeleteItem: (fileId: string, categoryId: string, itemName: string) => void;
+    // サンプルビュー更新（lock=false: ホバー / lock=true: ピン固定）
+    export let onSample: (hit: SearchHit, lock: boolean) => void;
 
     const SEARCH_TAB = Constants.ICON_SEARCH;
     let keyword = '';
 
     $: isActive = $activeTabId === SEARCH_TAB;
 
-    type SearchHit = { fileId: string; categoryId: string; name: string; prompt: string };
+    type SearchHit = { fileId: string; categoryId: string; name: string; prompt: string; image?: string };
 
     // 全タグのリーフノードをフラットに検索（fileId/categoryId も保持）
     $: results = (() => {
@@ -31,6 +33,7 @@
                             categoryId: cat.categoryId,
                             name: item.name,
                             prompt: item.prompt,
+                            image: item.image,
                         });
                     }
                 }
@@ -57,9 +60,17 @@
                     prompt={item.prompt}
                     onClickTag={(_p, _c) => onEditTag(item.fileId, item.categoryId, item.name, item.prompt)}
                     onDeleteItem={(name) => onDeleteItem(item.fileId, item.categoryId, name)}
+                    onHover={() => onSample(item, false)}
+                    onPin={() => onSample(item, true)}
                 />
             {:else}
-                <TagButton name={item.name} prompt={item.prompt} {onClickTag} />
+                <TagButton
+                    name={item.name}
+                    prompt={item.prompt}
+                    {onClickTag}
+                    onHover={() => onSample(item, false)}
+                    onPin={() => onSample(item, true)}
+                />
             {/if}
         {/each}
         {#if keyword.trim() && results.length === 0}
