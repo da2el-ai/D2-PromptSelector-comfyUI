@@ -101,6 +101,9 @@
   border: dashed 1px var(--p-tieredmenu-separator-border-color);
   border-radius: 4px;
   opacity: 0.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .d2ps-sample__prompt {
@@ -114,6 +117,23 @@
 
 .d2ps-sample__empty {
   color: var(--descrip-text);
+}
+
+.d2ps-sample__image--dragover {
+  outline: 2px dashed var(--p-primary-color, #098ce9);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.d2ps-sample__drophint {
+  color: var(--descrip-text);
+  font-size: 0.85em;
+  text-align: center;
+  padding: 4px;
+}
+
+.d2ps-sample__error {
+  color: var(--p-button-danger-background, #e5484d);
 }
 
 .d2ps-btn-wrapper {

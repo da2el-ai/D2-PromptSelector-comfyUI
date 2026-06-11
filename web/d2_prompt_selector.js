@@ -20,6 +20,15 @@ function is_function(thing) {
 function safe_not_equal(a, b) {
   return a != a ? b == b : a !== b || a && typeof a === "object" || typeof a === "function";
 }
+let src_url_equal_anchor;
+function src_url_equal(element_src, url) {
+  if (element_src === url) return true;
+  if (!src_url_equal_anchor) {
+    src_url_equal_anchor = document.createElement("a");
+  }
+  src_url_equal_anchor.href = url;
+  return element_src === src_url_equal_anchor.href;
+}
 function is_empty(obj) {
   return Object.keys(obj).length === 0;
 }
@@ -106,6 +115,9 @@ function select_option(select, value, mounting) {
 function select_value(select) {
   const selected_option = select.querySelector(":checked");
   return selected_option && selected_option.__value;
+}
+function toggle_class(element2, name, toggle) {
+  element2.classList.toggle(name, !!toggle);
 }
 function custom_event(type, detail, { bubbles = false, cancelable = false } = {}) {
   return new CustomEvent(type, { detail, bubbles, cancelable });
@@ -563,6 +575,8 @@ function derived(stores, fn, initial_value) {
 class Constants {
 }
 __publicField(Constants, "API_GET_TAGS", "/D2_prompt-selector/get_tags");
+// サンプル画像の配信ベース URL（prompt_images/ を配信）
+__publicField(Constants, "IMAGE_BASE_URL", "/D2_prompt-selector/images/");
 // ComfyUI 標準ボタンクラス
 __publicField(Constants, "CSS_CLASS_BUTTON_BASE", "inline-flex items-center justify-center cursor-pointer touch-manipulation appearance-none border-none text-sm font-inter transition-colors h-8 rounded-lg px-4 font-light");
 __publicField(Constants, "CSS_CLSSS_BUTTON_PRIMARY", "text-base-foreground bg-primary-background hover:bg-primary-background-hover");
@@ -581,6 +595,19 @@ __publicField(Constants, "D2_PS_SETTING_BACKUP_COUNT_ID", "D2.PromptSelector.Bac
 __publicField(Constants, "D2_PS_SETTING_BACKUP_COUNT_DEFAULT", 10);
 const backupCount = writable(Constants.D2_PS_SETTING_BACKUP_COUNT_DEFAULT);
 const BASE = "/D2_prompt-selector";
+function imageUrl(name) {
+  return Constants.IMAGE_BASE_URL + encodeURIComponent(name);
+}
+async function uploadImage(file, category, name, blob, filename) {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("category", category);
+  form.append("name", name);
+  form.append("backup_count", String(get_store_value(backupCount)));
+  form.append("image", blob, filename);
+  const res = await fetch(BASE + "/upload_image", { method: "POST", body: form });
+  return res.json();
+}
 function getWildCardPrompt(value) {
   if (Array.isArray(value)) {
     const strs2 = value.filter((v) => typeof v === "string");
@@ -1490,7 +1517,7 @@ function create_else_block$5(ctx) {
   let if_block;
   let if_block_anchor;
   let current;
-  const if_block_creators = [create_if_block_1$7, create_else_block_1$1];
+  const if_block_creators = [create_if_block_1$7, create_else_block_1$2];
   const if_blocks = [];
   function select_block_type_1(ctx2, dirty) {
     if (
@@ -1662,7 +1689,7 @@ function create_if_block$8(ctx) {
     }
   };
 }
-function create_else_block_1$1(ctx) {
+function create_else_block_1$2(ctx) {
   let tagbutton;
   let current;
   tagbutton = new TagButton({
@@ -2995,7 +3022,7 @@ class SearchView extends SvelteComponent {
     });
   }
 }
-function create_if_block_2$4(ctx) {
+function create_if_block_6(ctx) {
   let button;
   let t_1;
   let button_title_value;
@@ -3007,7 +3034,7 @@ function create_if_block_2$4(ctx) {
       t_1 = text("🔓");
       attr(button, "class", "d2ps-sample__btn");
       attr(button, "title", button_title_value = /*$t*/
-      ctx[2]("sample.unpin"));
+      ctx[6]("sample.unpin"));
     },
     m(target, anchor) {
       insert(target, button, anchor);
@@ -3017,15 +3044,15 @@ function create_if_block_2$4(ctx) {
           button,
           "click",
           /*handleUnlock*/
-          ctx[4]
+          ctx[7]
         );
         mounted = true;
       }
     },
     p(ctx2, dirty) {
       if (dirty & /*$t*/
-      4 && button_title_value !== (button_title_value = /*$t*/
-      ctx2[2]("sample.unpin"))) {
+      64 && button_title_value !== (button_title_value = /*$t*/
+      ctx2[6]("sample.unpin"))) {
         attr(button, "title", button_title_value);
       }
     },
@@ -3038,7 +3065,7 @@ function create_if_block_2$4(ctx) {
     }
   };
 }
-function create_if_block_1$5(ctx) {
+function create_if_block_5(ctx) {
   let button;
   let t_1;
   let button_title_value;
@@ -3050,7 +3077,7 @@ function create_if_block_1$5(ctx) {
       t_1 = text("✏️");
       attr(button, "class", "d2ps-sample__btn");
       attr(button, "title", button_title_value = /*$t*/
-      ctx[2]("sample.edit"));
+      ctx[6]("sample.edit"));
     },
     m(target, anchor) {
       insert(target, button, anchor);
@@ -3060,15 +3087,15 @@ function create_if_block_1$5(ctx) {
           button,
           "click",
           /*click_handler*/
-          ctx[5]
+          ctx[11]
         );
         mounted = true;
       }
     },
     p(ctx2, dirty) {
       if (dirty & /*$t*/
-      4 && button_title_value !== (button_title_value = /*$t*/
-      ctx2[2]("sample.edit"))) {
+      64 && button_title_value !== (button_title_value = /*$t*/
+      ctx2[6]("sample.edit"))) {
         attr(button, "title", button_title_value);
       }
     },
@@ -3081,11 +3108,119 @@ function create_if_block_1$5(ctx) {
     }
   };
 }
+function create_else_block_1$1(ctx) {
+  let div;
+  let if_block = (
+    /*$sampleItem*/
+    ctx[4] && create_if_block_4$1(ctx)
+  );
+  return {
+    c() {
+      div = element("div");
+      if (if_block) if_block.c();
+      attr(div, "class", "d2ps-sample__placeholder");
+    },
+    m(target, anchor) {
+      insert(target, div, anchor);
+      if (if_block) if_block.m(div, null);
+    },
+    p(ctx2, dirty) {
+      if (
+        /*$sampleItem*/
+        ctx2[4]
+      ) {
+        if (if_block) {
+          if_block.p(ctx2, dirty);
+        } else {
+          if_block = create_if_block_4$1(ctx2);
+          if_block.c();
+          if_block.m(div, null);
+        }
+      } else if (if_block) {
+        if_block.d(1);
+        if_block = null;
+      }
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(div);
+      }
+      if (if_block) if_block.d();
+    }
+  };
+}
+function create_if_block_3$1(ctx) {
+  let img;
+  let img_src_value;
+  let img_alt_value;
+  return {
+    c() {
+      img = element("img");
+      if (!src_url_equal(img.src, img_src_value = imageUrl(
+        /*$sampleItem*/
+        ctx[4].image
+      ))) attr(img, "src", img_src_value);
+      attr(img, "alt", img_alt_value = /*$sampleItem*/
+      ctx[4].name);
+    },
+    m(target, anchor) {
+      insert(target, img, anchor);
+    },
+    p(ctx2, dirty) {
+      if (dirty & /*$sampleItem*/
+      16 && !src_url_equal(img.src, img_src_value = imageUrl(
+        /*$sampleItem*/
+        ctx2[4].image
+      ))) {
+        attr(img, "src", img_src_value);
+      }
+      if (dirty & /*$sampleItem*/
+      16 && img_alt_value !== (img_alt_value = /*$sampleItem*/
+      ctx2[4].name)) {
+        attr(img, "alt", img_alt_value);
+      }
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(img);
+      }
+    }
+  };
+}
+function create_if_block_4$1(ctx) {
+  let span;
+  let t_1_value = (
+    /*$t*/
+    ctx[6]("tag.image.drop") + ""
+  );
+  let t_1;
+  return {
+    c() {
+      span = element("span");
+      t_1 = text(t_1_value);
+      attr(span, "class", "d2ps-sample__drophint");
+    },
+    m(target, anchor) {
+      insert(target, span, anchor);
+      append(span, t_1);
+    },
+    p(ctx2, dirty) {
+      if (dirty & /*$t*/
+      64 && t_1_value !== (t_1_value = /*$t*/
+      ctx2[6]("tag.image.drop") + "")) set_data(t_1, t_1_value);
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(span);
+      }
+    }
+  };
+}
 function create_else_block$3(ctx) {
   let span;
   let t_1_value = (
     /*$t*/
-    ctx[2]("sample.empty") + ""
+    ctx[6]("sample.empty") + ""
   );
   let t_1;
   return {
@@ -3100,8 +3235,8 @@ function create_else_block$3(ctx) {
     },
     p(ctx2, dirty) {
       if (dirty & /*$t*/
-      4 && t_1_value !== (t_1_value = /*$t*/
-      ctx2[2]("sample.empty") + "")) set_data(t_1, t_1_value);
+      64 && t_1_value !== (t_1_value = /*$t*/
+      ctx2[6]("sample.empty") + "")) set_data(t_1, t_1_value);
     },
     d(detaching) {
       if (detaching) {
@@ -3110,10 +3245,10 @@ function create_else_block$3(ctx) {
     }
   };
 }
-function create_if_block$6(ctx) {
+function create_if_block_2$4(ctx) {
   let t_1_value = (
     /*$sampleItem*/
-    ctx[3].prompt + ""
+    ctx[4].prompt + ""
   );
   let t_1;
   return {
@@ -3125,8 +3260,8 @@ function create_if_block$6(ctx) {
     },
     p(ctx2, dirty) {
       if (dirty & /*$sampleItem*/
-      8 && t_1_value !== (t_1_value = /*$sampleItem*/
-      ctx2[3].prompt + "")) set_data(t_1, t_1_value);
+      16 && t_1_value !== (t_1_value = /*$sampleItem*/
+      ctx2[4].prompt + "")) set_data(t_1, t_1_value);
     },
     d(detaching) {
       if (detaching) {
@@ -3135,36 +3270,112 @@ function create_if_block$6(ctx) {
     }
   };
 }
+function create_if_block_1$5(ctx) {
+  let t_1_value = (
+    /*$t*/
+    ctx[6]("common.saving") + ""
+  );
+  let t_1;
+  return {
+    c() {
+      t_1 = text(t_1_value);
+    },
+    m(target, anchor) {
+      insert(target, t_1, anchor);
+    },
+    p(ctx2, dirty) {
+      if (dirty & /*$t*/
+      64 && t_1_value !== (t_1_value = /*$t*/
+      ctx2[6]("common.saving") + "")) set_data(t_1, t_1_value);
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(t_1);
+      }
+    }
+  };
+}
+function create_if_block$6(ctx) {
+  let span;
+  let t_1;
+  return {
+    c() {
+      span = element("span");
+      t_1 = text(
+        /*errorMsg*/
+        ctx[2]
+      );
+      attr(span, "class", "d2ps-sample__error");
+    },
+    m(target, anchor) {
+      insert(target, span, anchor);
+      append(span, t_1);
+    },
+    p(ctx2, dirty) {
+      if (dirty & /*errorMsg*/
+      4) set_data(
+        t_1,
+        /*errorMsg*/
+        ctx2[2]
+      );
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(span);
+      }
+    }
+  };
+}
 function create_fragment$9(ctx) {
-  let div4;
+  let div3;
   let div0;
   let t0;
   let span;
   let t1;
   let t2;
-  let div2;
+  let div1;
   let t3;
-  let div3;
+  let div2;
+  let mounted;
+  let dispose;
   let if_block0 = (
     /*$isSampleLocked*/
-    ctx[1] && create_if_block_2$4(ctx)
+    ctx[5] && create_if_block_6(ctx)
   );
   let if_block1 = (
     /*$sampleItem*/
-    ctx[3] && create_if_block_1$5(ctx)
+    ctx[4] && create_if_block_5(ctx)
   );
   function select_block_type(ctx2, dirty) {
+    var _a2;
     if (
       /*$sampleItem*/
-      ctx2[3]
-    ) return create_if_block$6;
-    return create_else_block$3;
+      (_a2 = ctx2[4]) == null ? void 0 : _a2.image
+    ) return create_if_block_3$1;
+    return create_else_block_1$1;
   }
   let current_block_type = select_block_type(ctx);
   let if_block2 = current_block_type(ctx);
+  function select_block_type_1(ctx2, dirty) {
+    if (
+      /*errorMsg*/
+      ctx2[2]
+    ) return create_if_block$6;
+    if (
+      /*uploading*/
+      ctx2[3]
+    ) return create_if_block_1$5;
+    if (
+      /*$sampleItem*/
+      ctx2[4]
+    ) return create_if_block_2$4;
+    return create_else_block$3;
+  }
+  let current_block_type_1 = select_block_type_1(ctx);
+  let if_block3 = current_block_type_1(ctx);
   return {
     c() {
-      div4 = element("div");
+      div3 = element("div");
       div0 = element("div");
       if (if_block0) if_block0.c();
       t0 = space();
@@ -3172,46 +3383,76 @@ function create_fragment$9(ctx) {
       t1 = space();
       if (if_block1) if_block1.c();
       t2 = space();
-      div2 = element("div");
-      div2.innerHTML = `<div class="d2ps-sample__placeholder"></div>`;
-      t3 = space();
-      div3 = element("div");
+      div1 = element("div");
       if_block2.c();
+      t3 = space();
+      div2 = element("div");
+      if_block3.c();
       attr(span, "class", "d2ps-sample__spacer");
       attr(div0, "class", "d2ps-sample__header");
-      attr(div2, "class", "d2ps-sample__image");
-      attr(div3, "class", "d2ps-sample__prompt");
-      attr(div4, "class", "d2ps-sample");
+      attr(div1, "class", "d2ps-sample__image");
+      toggle_class(
+        div1,
+        "d2ps-sample__image--dragover",
+        /*isDragOver*/
+        ctx[1]
+      );
+      attr(div2, "class", "d2ps-sample__prompt");
+      attr(div3, "class", "d2ps-sample");
       attr(
-        div4,
+        div3,
         "data-is-pinned",
         /*$isSampleLocked*/
-        ctx[1]
+        ctx[5]
       );
     },
     m(target, anchor) {
-      insert(target, div4, anchor);
-      append(div4, div0);
+      insert(target, div3, anchor);
+      append(div3, div0);
       if (if_block0) if_block0.m(div0, null);
       append(div0, t0);
       append(div0, span);
       append(div0, t1);
       if (if_block1) if_block1.m(div0, null);
-      append(div4, t2);
-      append(div4, div2);
-      append(div4, t3);
-      append(div4, div3);
-      if_block2.m(div3, null);
+      append(div3, t2);
+      append(div3, div1);
+      if_block2.m(div1, null);
+      append(div3, t3);
+      append(div3, div2);
+      if_block3.m(div2, null);
+      if (!mounted) {
+        dispose = [
+          listen(
+            div1,
+            "dragover",
+            /*handleDragOver*/
+            ctx[8]
+          ),
+          listen(
+            div1,
+            "dragleave",
+            /*handleDragLeave*/
+            ctx[9]
+          ),
+          listen(
+            div1,
+            "drop",
+            /*handleDrop*/
+            ctx[10]
+          )
+        ];
+        mounted = true;
+      }
     },
     p(ctx2, [dirty]) {
       if (
         /*$isSampleLocked*/
-        ctx2[1]
+        ctx2[5]
       ) {
         if (if_block0) {
           if_block0.p(ctx2, dirty);
         } else {
-          if_block0 = create_if_block_2$4(ctx2);
+          if_block0 = create_if_block_6(ctx2);
           if_block0.c();
           if_block0.m(div0, t0);
         }
@@ -3221,12 +3462,12 @@ function create_fragment$9(ctx) {
       }
       if (
         /*$sampleItem*/
-        ctx2[3]
+        ctx2[4]
       ) {
         if (if_block1) {
           if_block1.p(ctx2, dirty);
         } else {
-          if_block1 = create_if_block_1$5(ctx2);
+          if_block1 = create_if_block_5(ctx2);
           if_block1.c();
           if_block1.m(div0, null);
         }
@@ -3241,16 +3482,35 @@ function create_fragment$9(ctx) {
         if_block2 = current_block_type(ctx2);
         if (if_block2) {
           if_block2.c();
-          if_block2.m(div3, null);
+          if_block2.m(div1, null);
+        }
+      }
+      if (dirty & /*isDragOver*/
+      2) {
+        toggle_class(
+          div1,
+          "d2ps-sample__image--dragover",
+          /*isDragOver*/
+          ctx2[1]
+        );
+      }
+      if (current_block_type_1 === (current_block_type_1 = select_block_type_1(ctx2)) && if_block3) {
+        if_block3.p(ctx2, dirty);
+      } else {
+        if_block3.d(1);
+        if_block3 = current_block_type_1(ctx2);
+        if (if_block3) {
+          if_block3.c();
+          if_block3.m(div2, null);
         }
       }
       if (dirty & /*$isSampleLocked*/
-      2) {
+      32) {
         attr(
-          div4,
+          div3,
           "data-is-pinned",
           /*$isSampleLocked*/
-          ctx2[1]
+          ctx2[5]
         );
       }
     },
@@ -3258,30 +3518,84 @@ function create_fragment$9(ctx) {
     o: noop,
     d(detaching) {
       if (detaching) {
-        detach(div4);
+        detach(div3);
       }
       if (if_block0) if_block0.d();
       if (if_block1) if_block1.d();
       if_block2.d();
+      if_block3.d();
+      mounted = false;
+      run_all(dispose);
     }
   };
 }
 function instance$9($$self, $$props, $$invalidate) {
+  let $sampleItem;
   let $isSampleLocked;
   let $t;
-  let $sampleItem;
-  component_subscribe($$self, isSampleLocked, ($$value) => $$invalidate(1, $isSampleLocked = $$value));
-  component_subscribe($$self, t, ($$value) => $$invalidate(2, $t = $$value));
-  component_subscribe($$self, sampleItem, ($$value) => $$invalidate(3, $sampleItem = $$value));
+  component_subscribe($$self, sampleItem, ($$value) => $$invalidate(4, $sampleItem = $$value));
+  component_subscribe($$self, isSampleLocked, ($$value) => $$invalidate(5, $isSampleLocked = $$value));
+  component_subscribe($$self, t, ($$value) => $$invalidate(6, $t = $$value));
   let { onEdit } = $$props;
+  let isDragOver = false;
+  let errorMsg = "";
+  let uploading = false;
   function handleUnlock() {
     isSampleLocked.set(false);
+  }
+  function handleDragOver(e) {
+    if (!$sampleItem) return;
+    e.preventDefault();
+    $$invalidate(1, isDragOver = true);
+  }
+  function handleDragLeave() {
+    $$invalidate(1, isDragOver = false);
+  }
+  async function handleDrop(e) {
+    var _a2, _b;
+    $$invalidate(1, isDragOver = false);
+    const item = $sampleItem;
+    if (!item) return;
+    e.preventDefault();
+    const file = (_b = (_a2 = e.dataTransfer) == null ? void 0 : _a2.files) == null ? void 0 : _b[0];
+    if (!file) return;
+    $$invalidate(2, errorMsg = "");
+    $$invalidate(3, uploading = true);
+    try {
+      const res = await uploadImage(item.fileId, item.categoryId, item.name, file, file.name);
+      if (res.error) {
+        $$invalidate(2, errorMsg = res.error === "invalid_format" ? get_store_value(t)("tag.image.invalidFormat") : get_store_value(t)("common.error.generic"));
+        return;
+      }
+      if (res.image) {
+        const newImage = res.image;
+        sampleItem.update((s) => s ? { ...s, image: newImage } : s);
+      }
+      await fetchTags();
+    } catch {
+      $$invalidate(2, errorMsg = get_store_value(t)("common.error.generic"));
+    } finally {
+      $$invalidate(3, uploading = false);
+    }
   }
   const click_handler = () => onEdit($sampleItem);
   $$self.$$set = ($$props2) => {
     if ("onEdit" in $$props2) $$invalidate(0, onEdit = $$props2.onEdit);
   };
-  return [onEdit, $isSampleLocked, $t, $sampleItem, handleUnlock, click_handler];
+  return [
+    onEdit,
+    isDragOver,
+    errorMsg,
+    uploading,
+    $sampleItem,
+    $isSampleLocked,
+    $t,
+    handleUnlock,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    click_handler
+  ];
 }
 class SampleView extends SvelteComponent {
   constructor(options) {

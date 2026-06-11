@@ -3,3 +3,13 @@ config/sizeselector_config.yaml
 node_modules
 tags/
 yarn.lock
+.claude/
+CLAUDE.md
+frontend/package-lock.json
+tags copy/
+tags_migration/
+tags_bak_*/
+prompt_images/
+src_old/
+test/
+参考/

@@ -1,8 +1,56 @@
 import { get } from 'svelte/store';
 import type { AllTags, RawTagsResponse, RawTagValue, TagFile, TagCategory, TagItem } from './types';
 import { backupCount } from './stores/settings';
+import { Constants } from './Constants';
 
 const BASE = '/D2_prompt-selector';
+
+/** 画像ファイル名から配信 URL を組み立てる */
+export function imageUrl(name: string): string {
+  return Constants.IMAGE_BASE_URL + encodeURIComponent(name);
+}
+
+export type ImageUploadResult = { success?: boolean; image?: string; url?: string; error?: string };
+
+/**
+ * 画像アップロード（通常モード：既存項目へ即時登録）。
+ * multipart のため backup_count はフォームフィールドとして手動付与する（JSON 専用の apiPostWithBackup は使えない）。
+ */
+export async function uploadImage(
+  file: string,
+  category: string,
+  name: string,
+  blob: Blob,
+  filename: string,
+): Promise<ImageUploadResult> {
+  const form = new FormData();
+  form.append('file', file);
+  form.append('category', category);
+  form.append('name', name);
+  form.append('backup_count', String(get(backupCount)));
+  form.append('image', blob, filename);
+  const res = await fetch(BASE + '/upload_image', { method: 'POST', body: form });
+  return res.json() as Promise<ImageUploadResult>;
+}
+
+/** 画像アップロード（temp モード：新規追加用の一時保存）。YAML は触らずファイル名のみ返る */
+export async function uploadImageTemp(blob: Blob, filename: string): Promise<ImageUploadResult> {
+  const form = new FormData();
+  form.append('temp', 'true');
+  form.append('image', blob, filename);
+  const res = await fetch(BASE + '/upload_image', { method: 'POST', body: form });
+  return res.json() as Promise<ImageUploadResult>;
+}
+
+/** 画像削除（書き込み系。YAML をプレーン文字列に戻す） */
+export async function deleteImage(file: string, category: string, name: string): Promise<{ success?: boolean; error?: string }> {
+  return apiPostWithBackup('/delete_image', { file, category, name });
+}
+
+/** 不要なテンポラリ画像を削除（パネル起動時・編集完了時に呼ぶ） */
+export async function cleanupTempImages(): Promise<void> {
+  await apiPost('/cleanup_temp_images', {});
+}
 
 /**
  * ネスト値からワイルドカードプロンプトを生成（オリジナル $_getWildCardPrompt 相当）

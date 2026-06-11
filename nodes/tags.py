@@ -1,6 +1,7 @@
 import yaml
 import json
 import shutil
+import uuid
 from datetime import datetime
 from pathlib import Path
 from aiohttp import web
@@ -73,6 +74,7 @@ async def route_d2_ps_add_item(request):
             name=body["name"],
             prompt=body["prompt"],
             new_file=body.get("new_file"),
+            image=body.get("image"),
         )
         return web.json_response(result)
     except Exception as e:
@@ -201,9 +203,101 @@ async def route_d2_ps_delete_item(request):
         return web.json_response({"error": str(e)}, status=500)
 
 
+"""
+画像アップロード（multipart）
+- 通常モード（file/category/name 指定）：既存項目に画像を即時登録し、YAML を leaf-meta dict 化
+- temp モード（temp=true）：prompt_images/ に temp_* で一時保存し、ファイル名のみ返す（新規追加用）
+"""
+@PromptServer.instance.routes.post("/D2_prompt-selector/upload_image")
+async def route_d2_ps_upload_image(request):
+    try:
+        reader = await request.multipart()
+        fields = {}
+        image_data = None
+        image_filename = ""
+        async for part in reader:
+            if part.name == "image":
+                image_filename = part.filename or ""
+                image_data = await part.read(decode=False)
+            else:
+                fields[part.name] = await part.text()
+
+        if image_data is None:
+            return web.json_response({"error": "no_image"}, status=400)
+
+        is_temp = str(fields.get("temp", "")).lower() in ("1", "true", "yes")
+
+        if is_temp:
+            # temp モード：バックアップ不要。YAML は触らない。
+            result = TagsUtil.save_image(image_data, image_filename, temp=True)
+            if "error" in result:
+                return web.json_response(result, status=400)
+        else:
+            # 通常モード：書き込み系なのでバックアップ → 保存 → YAML 連携
+            TagsUtil.create_backup(_backup_count_from(fields))
+            result = TagsUtil.save_image(image_data, image_filename, temp=False)
+            if "error" in result:
+                return web.json_response(result, status=400)
+            link = TagsUtil.set_item_image(
+                file=fields["file"],
+                category=fields["category"],
+                name=fields["name"],
+                image_filename=result["name"],
+            )
+            if "error" in link:
+                # YAML 連携に失敗したら保存した画像を破棄
+                TagsUtil._delete_image_files([result["name"]])
+                return web.json_response(link, status=400)
+
+        name = result["name"]
+        return web.json_response({
+            "success": True,
+            "image": name,
+            "url": f"/D2_prompt-selector/images/{name}",
+        })
+    except Exception as e:
+        return web.json_response({"error": str(e)}, status=500)
+
+
+"""
+画像削除（書き込み系）
+- 画像ファイルを削除し、YAML 項目を leaf-meta dict からプレーン文字列に戻す
+"""
+@PromptServer.instance.routes.post("/D2_prompt-selector/delete_image")
+async def route_d2_ps_delete_image(request):
+    try:
+        body = await request.json()
+        TagsUtil.create_backup(_backup_count_from(body))
+        result = TagsUtil.delete_item_image(
+            file=body["file"],
+            category=body["category"],
+            name=body["name"],
+        )
+        return web.json_response(result)
+    except Exception as e:
+        return web.json_response({"error": str(e)}, status=500)
+
+
+"""
+不要なテンポラリ画像（temp_*）を削除
+- パネル起動時・プロンプト編集完了時にフロントから呼ぶ
+"""
+@PromptServer.instance.routes.post("/D2_prompt-selector/cleanup_temp_images")
+async def route_d2_ps_cleanup_temp_images(request):
+    try:
+        TagsUtil.cleanup_temp_images()
+        return web.json_response({"success": True})
+    except Exception as e:
+        return web.json_response({"error": str(e)}, status=500)
+
+
 class TagsUtil:
     BASE_DIR = Path(__file__).parent.parent
     TAGS_DIR = BASE_DIR / 'tags'
+    # 画像は tags/ の外に保存（バックアップ copytree を肥大化させないため）
+    IMAGES_DIR = BASE_DIR / 'prompt_images'
+    ALLOWED_IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp'}
+    TEMP_IMAGE_PREFIX = 'temp_'
     tags = {}
 
     @classmethod
@@ -271,6 +365,164 @@ class TagsUtil:
             return
         for old in backups[:excess]:
             shutil.rmtree(old, ignore_errors=True)
+
+    # ------------------------------------------------------------------ #
+    # 画像（prompt_images/）
+    # ------------------------------------------------------------------ #
+
+    @classmethod
+    def ensure_images_dir(cls):
+        """prompt_images/ を作成（存在すれば何もしない）"""
+        cls.IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+
+    @classmethod
+    def _detect_image_ext(cls, data: bytes, filename: str):
+        """
+        マジックバイトから許可形式の拡張子（小文字・ドット付き）を返す。
+        png / jpeg / webp 以外は None。
+        """
+        if data[:8] == b'\x89PNG\r\n\x1a\n':
+            return '.png'
+        if data[:3] == b'\xff\xd8\xff':
+            return '.jpg'
+        if len(data) >= 12 and data[:4] == b'RIFF' and data[8:12] == b'WEBP':
+            return '.webp'
+        return None
+
+    @classmethod
+    def _new_image_name(cls, ext: str) -> str:
+        """正式な画像ファイル名（uuid + 拡張子）を返す"""
+        return f"{uuid.uuid4().hex}{ext}"
+
+    @classmethod
+    def _new_temp_image_name(cls, ext: str) -> str:
+        """temp_YYYYMMDD-HHMMSS の一時画像ファイル名を返す（秒単位衝突時は連番）"""
+        base = f"{cls.TEMP_IMAGE_PREFIX}{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+        name = f"{base}{ext}"
+        if not (cls.IMAGES_DIR / name).exists():
+            return name
+        for i in range(1, 1000):
+            name = f"{base}_{i}{ext}"
+            if not (cls.IMAGES_DIR / name).exists():
+                return name
+        raise RuntimeError("temp image name collision (unexpected)")
+
+    @classmethod
+    def save_image(cls, data: bytes, filename: str, temp: bool) -> dict:
+        """
+        画像バイナリを prompt_images/ に保存する。
+        - 形式バリデーション（png / jpeg / webp）。不許可は {"error": "invalid_format"}
+        - temp=True なら temp_* 名、False なら uuid 名で保存
+        - リサイズ・サムネ生成はしない。サイズ上限なし。
+        - 成功時 {"name": <ファイル名>}
+        """
+        ext = cls._detect_image_ext(data, filename)
+        if ext is None:
+            return {"error": "invalid_format"}
+        cls.ensure_images_dir()
+        name = cls._new_temp_image_name(ext) if temp else cls._new_image_name(ext)
+        (cls.IMAGES_DIR / name).write_bytes(data)
+        return {"name": name}
+
+    @classmethod
+    def _delete_image_files(cls, filenames):
+        """画像ファイル名のリストを prompt_images/ から削除する（パス安全チェック付き）"""
+        for fn in filenames:
+            if not fn or '/' in fn or '\\' in fn:
+                continue
+            p = cls.IMAGES_DIR / fn
+            if p.is_file():
+                p.unlink()
+
+    @classmethod
+    def _collect_images_from_category(cls, cat) -> list:
+        """カテゴリ dict 内の leaf-meta 項目の image をすべて集める"""
+        images = []
+        if isinstance(cat, dict):
+            for v in cat.values():
+                if cls._is_leaf_meta(v) and v.get("image"):
+                    images.append(v["image"])
+        return images
+
+    @classmethod
+    def _collect_images_from_file(cls, data: dict) -> list:
+        """ファイル dict 全体（全カテゴリ）の image をすべて集める"""
+        images = []
+        for key, cat in (data or {}).items():
+            if key == "__config__":
+                continue
+            images.extend(cls._collect_images_from_category(cat))
+        return images
+
+    @classmethod
+    def _promote_temp_image(cls, temp_name: str) -> dict:
+        """temp 画像を正式名にリネームする。成功時 {"name": 正式名}"""
+        if not temp_name or '/' in temp_name or '\\' in temp_name:
+            return {"error": "invalid_image"}
+        ext = Path(temp_name).suffix.lower()
+        if ext not in cls.ALLOWED_IMAGE_EXTS:
+            return {"error": "invalid_format"}
+        src = cls.IMAGES_DIR / temp_name
+        if not src.is_file():
+            return {"error": "image_not_found"}
+        new_name = cls._new_image_name(ext)
+        src.rename(cls.IMAGES_DIR / new_name)
+        return {"name": new_name}
+
+    @classmethod
+    def set_item_image(cls, file: str, category: str, name: str, image_filename: str) -> dict:
+        """
+        既存項目を leaf-meta dict 化して image を設定する（通常モードのアップロード）。
+        旧画像があれば置換後に削除する。項目が無ければ {"error": "not_found"}。
+        """
+        data = cls._load_file(file)
+        if category not in data or name not in data[category]:
+            return {"error": "not_found"}
+
+        old_value = data[category][name]
+        if cls._is_leaf_meta(old_value):
+            old_image = old_value.get("image")
+            prompt = old_value["prompt"]
+        else:
+            old_image = None
+            prompt = old_value if isinstance(old_value, str) else ""
+
+        # 既存キーへの再代入は dict の順序を保つ
+        data[category][name] = {"prompt": prompt, "image": image_filename}
+        cls._save_file(file, data)
+
+        if old_image and old_image != image_filename:
+            cls._delete_image_files([old_image])
+        return {"success": True}
+
+    @classmethod
+    def delete_item_image(cls, file: str, category: str, name: str) -> dict:
+        """
+        項目の画像を削除し、leaf-meta dict をプレーン文字列に戻す。
+        - 項目が無ければ {"error": "not_found"}
+        - 画像なし（既に文字列）なら冪等に {"success": True}
+        """
+        data = cls._load_file(file)
+        if category not in data or name not in data[category]:
+            return {"error": "not_found"}
+
+        value = data[category][name]
+        if cls._is_leaf_meta(value):
+            image = value.get("image")
+            data[category][name] = value["prompt"]
+            cls._save_file(file, data)
+            if image:
+                cls._delete_image_files([image])
+        return {"success": True}
+
+    @classmethod
+    def cleanup_temp_images(cls):
+        """prompt_images/ 内の temp_* をすべて削除する"""
+        if not cls.IMAGES_DIR.exists():
+            return
+        for p in cls.IMAGES_DIR.glob(f"{cls.TEMP_IMAGE_PREFIX}*"):
+            if p.is_file():
+                p.unlink()
 
     # ------------------------------------------------------------------ #
     # マイグレーション関連
@@ -467,11 +719,13 @@ class TagsUtil:
 
     @classmethod
     def add_item(cls, file: str, category: str, new_category: str | None,
-                 name: str, prompt: str, new_file: str | None = None) -> dict:
+                 name: str, prompt: str, new_file: str | None = None,
+                 image: str | None = None) -> dict:
         """
         タグを1件追加する。
         - file == "__new__" のとき new_file を実際のファイル名として使い、必要なら新規作成
         - category == "__new__" のとき new_category を実際のカテゴリ名として使う
+        - image（temp 画像ファイル名）が指定された場合は正式名にリネームして leaf-meta dict 化
         - 同一カテゴリ内に同名アイテムが存在する場合は {"error": "duplicate"} を返す
         - 成功時は {"success": True} を返す
         """
@@ -494,7 +748,15 @@ class TagsUtil:
         if name in data[cat_name]:
             return {"error": "duplicate"}
 
-        data[cat_name][name] = prompt
+        # 画像（temp）があれば正式名にリネームしてから書き込む（リネーム成功後に YAML 反映）
+        value = prompt
+        if image:
+            promoted = cls._promote_temp_image(image)
+            if "error" in promoted:
+                return promoted
+            value = {"prompt": prompt, "image": promoted["name"]}
+
+        data[cat_name][name] = value
         cls._save_file(file, data)
         return {"success": True}
 
@@ -708,9 +970,13 @@ class TagsUtil:
         if cls._needs_migration(data):
             return {"error": "migration_needed"}
 
+        images = []
         if type == "item":
             if category not in data or name not in data[category]:
                 return {"error": "not_found"}
+            value = data[category][name]
+            if cls._is_leaf_meta(value) and value.get("image"):
+                images.append(value["image"])
             del data[category][name]
             if not data[category]:
                 del data[category]
@@ -718,12 +984,14 @@ class TagsUtil:
         elif type == "category":
             if category not in data:
                 return {"error": "not_found"}
+            images = cls._collect_images_from_category(data[category])
             del data[category]
 
         else:
             return {"error": "invalid_type"}
 
         cls._save_file(file, data)
+        cls._delete_image_files(images)
         return {"success": True}
 
     @classmethod
@@ -741,7 +1009,15 @@ class TagsUtil:
         if not filepath.exists():
             return {"error": "not_found"}
 
+        # 削除前にファイル内の画像を収集（leaf-meta のみ。旧形式は対象なし）
+        try:
+            file_data = yaml.safe_load(filepath.read_text(encoding="utf-8")) or {}
+        except Exception:
+            file_data = {}
+        images = cls._collect_images_from_file(file_data)
+
         filepath.unlink()
+        cls._delete_image_files(images)
 
         # __config__.yml の sort リストから除外
         config_path = cls.TAGS_DIR / "__config__.yml"

@@ -1,5 +1,7 @@
 export class Constants {
   static API_GET_TAGS = '/D2_prompt-selector/get_tags';
+  // サンプル画像の配信ベース URL（prompt_images/ を配信）
+  static IMAGE_BASE_URL = '/D2_prompt-selector/images/';
   // ComfyUI 標準ボタンクラス
   static CSS_CLASS_BUTTON_BASE =
     'inline-flex items-center justify-center cursor-pointer touch-manipulation appearance-none border-none text-sm font-inter transition-colors h-8 rounded-lg px-4 font-light';
