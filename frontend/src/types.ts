@@ -3,6 +3,7 @@
 export type TagItem = {
   name: string;       // 表示名
   prompt: string;     // リーフ: 挿入プロンプト / グループ: ワイルドカード or ''
+  image?: string;     // 画像ファイル名（leaf-meta 形式のとき。prompt_images/ 配下）
   children?: TagItem[]; // 旧形式の多階層ネスト
 };
 

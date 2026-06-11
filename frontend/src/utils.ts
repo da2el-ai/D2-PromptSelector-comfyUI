@@ -35,6 +35,13 @@ function parseTagNode(name: string, value: RawTagValue): TagItem {
       .map((v) => ({ name: v, prompt: v }));
     return { name, prompt: getWildCardPrompt(value), children };
   }
+  // leaf-meta：文字列の prompt キーを持つ dict はリーフ＋メタ情報（画像つき項目）
+  // それ以外の dict は従来どおりグループノード（ワイルドカード）
+  const obj = value as Record<string, RawTagValue>;
+  if (typeof obj.prompt === 'string') {
+    const image = typeof obj.image === 'string' ? obj.image : undefined;
+    return { name, prompt: obj.prompt, image };
+  }
   // ネストオブジェクト
   const children: TagItem[] = Object.entries(value).map(([k, v]) => parseTagNode(k, v));
   return { name, prompt: getWildCardPrompt(value as Record<string, RawTagValue>), children };

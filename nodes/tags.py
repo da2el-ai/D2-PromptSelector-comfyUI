@@ -288,12 +288,21 @@ class TagsUtil:
         return False
 
     @classmethod
+    def _is_leaf_meta(cls, v) -> bool:
+        """
+        画像つきリーフ項目（leaf-meta）かどうかを判定する。
+        文字列の prompt キーを持つ dict（例：{prompt: "...", image: "x.webp"}）なら True。
+        この形式は旧形式（マイグレーション対象）ともグループノードとも区別する。
+        """
+        return isinstance(v, dict) and isinstance(v.get("prompt"), str)
+
+    @classmethod
     def _needs_migration(cls, data: dict) -> bool:
         """
         YAMLデータが旧形式かどうかを判定する。
         以下のいずれかに該当する場合は旧形式：
         - カテゴリ値がリスト（配列形式）
-        - カテゴリ内の値が文字列以外（ネスト辞書・リスト）
+        - カテゴリ内の値が文字列でも leaf-meta dict でもない（ネスト辞書・リスト）
         """
         for key, value in data.items():
             if key == "__config__":
@@ -302,8 +311,11 @@ class TagsUtil:
                 return True
             if isinstance(value, dict):
                 for v in value.values():
-                    if not isinstance(v, str):
-                        return True
+                    if isinstance(v, str):
+                        continue
+                    if cls._is_leaf_meta(v):
+                        continue
+                    return True
         return False
 
     @classmethod
@@ -361,11 +373,17 @@ class TagsUtil:
                     for k, v in item.items():
                         if isinstance(v, str):
                             items[k] = v
+                        elif cls._is_leaf_meta(v):
+                            # 画像つきリーフは dict のまま保持（昇格させない）
+                            items[k] = v
                         else:
                             cls._flatten_category(k, v, result, parent=full_name)
         elif isinstance(cat_value, dict):
             for k, v in cat_value.items():
                 if isinstance(v, str):
+                    items[k] = v
+                elif cls._is_leaf_meta(v):
+                    # 画像つきリーフは dict のまま保持（昇格させない）
                     items[k] = v
                 elif isinstance(v, (list, dict)):
                     cls._flatten_category(k, v, result, parent=full_name)
@@ -513,6 +531,12 @@ class TagsUtil:
         if category not in src_data or name not in src_data[category]:
             return {"error": "not_found"}
 
+        # 既存値が画像つき（leaf-meta）なら image を引き継ぐ。
+        # 引き継ぐ新しい値（画像なしは文字列、画像ありは {prompt, image} dict）を作る。
+        old_value = src_data[category][name]
+        old_image = old_value.get("image") if cls._is_leaf_meta(old_value) else None
+        new_value = {"prompt": new_prompt, "image": old_image} if old_image else new_prompt
+
         # 移動先データ（ファイルが同じ場合は同一オブジェクト）
         if dst_file == src_file:
             dst_data = src_data
@@ -529,13 +553,13 @@ class TagsUtil:
 
         # 同ファイル・同カテゴリ内の編集は順序を保持して in-place 更新
         if dst_file == src_file and dst_cat == category:
-            cls._rename_key_in_place(src_data[category], name, new_name, new_prompt)
+            cls._rename_key_in_place(src_data[category], name, new_name, new_value)
         else:
-            # 移動：元を削除して移動先末尾に追加
+            # 移動：元を削除して移動先末尾に追加（image も引き継ぐ）
             del src_data[category][name]
             if not src_data[category]:
                 del src_data[category]
-            dst_data[dst_cat][new_name] = new_prompt
+            dst_data[dst_cat][new_name] = new_value
 
         # 保存
         if dst_file == src_file:

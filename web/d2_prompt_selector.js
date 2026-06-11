@@ -602,6 +602,11 @@ function parseTagNode(name, value) {
     const children22 = value.filter((v) => typeof v === "string").map((v) => ({ name: v, prompt: v }));
     return { name, prompt: getWildCardPrompt(value), children: children22 };
   }
+  const obj = value;
+  if (typeof obj.prompt === "string") {
+    const image = typeof obj.image === "string" ? obj.image : void 0;
+    return { name, prompt: obj.prompt, image };
+  }
   const children2 = Object.entries(value).map(([k, v]) => parseTagNode(k, v));
   return { name, prompt: getWildCardPrompt(value), children: children2 };
 }
