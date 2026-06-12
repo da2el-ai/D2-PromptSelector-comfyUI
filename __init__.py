@@ -34,9 +34,11 @@ if os.path.exists(d2_web_path):
         web.static("/D2_prompt-selector/assets/", d2_web_path)
     ])
 
-# サンプル画像の保存先（tags/ の外）。web.static は存在しないパスでエラーになりうるため
-# ルート登録の前にディレクトリを確保する。
+# サンプル画像の保存先（tags/ の外）。
+# tags 同様、prompt_images が空/未作成なら prompt_images_sample を初期データとして複製する。
 d2_images_path = os.path.join(d2_ps_path, "prompt_images")
+copy_if_empty(os.path.join(d2_ps_path, "prompt_images_sample"), d2_images_path)
+# サンプルが無い場合でも配信ディレクトリは必要（web.static は存在しないパスでエラーになりうる）
 os.makedirs(d2_images_path, exist_ok=True)
 server.PromptServer.instance.app.add_routes([
     web.static("/D2_prompt-selector/images/", d2_images_path)

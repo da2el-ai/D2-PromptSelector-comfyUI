@@ -1,17 +1,43 @@
 髪単色:
-  黒髪: black hair
-  金髪: blonde hair
-  茶髪: brown hair
-  赤髪: red hair
-  ピンク髪: pink hair
-  青髪: blue hair
-  水色髪: aqua hair
-  緑髪: green hair
-  紫髪: purple hair
-  オレンジ髪: orange hair
-  銀髪: silver hair
-  灰髪: gray hair
-  白髪: white hair
+  黒髪:
+    prompt: black hair
+    image: black_hair.webp
+  金髪:
+    prompt: blonde hair
+    image: blonde_hair.webp
+  茶髪:
+    prompt: brown hair
+    image: brown_hair.webp
+  赤髪:
+    prompt: red hair
+    image: red_hair.webp
+  ピンク髪:
+    prompt: pink hair
+    image: pink_hair.webp
+  青髪:
+    prompt: blue hair
+    image: blue_hair.webp
+  水色髪:
+    prompt: aqua hair
+    image: aqua_hair.webp
+  緑髪:
+    prompt: green hair
+    image: green_hair.webp
+  紫髪:
+    prompt: purple hair
+    image: purple_hair.webp
+  オレンジ髪:
+    prompt: orange hair
+    image: orange_hair.webp
+  銀髪:
+    prompt: silver hair
+    image: silver_hair.webp
+  灰髪:
+    prompt: gray hair
+    image: gray_hair.webp
+  白髪:
+    prompt: white hair
+    image: white_hair.webp
 髪複数色:
   マルチカラー: multicolored hair
   メッシュ: streaked hair
