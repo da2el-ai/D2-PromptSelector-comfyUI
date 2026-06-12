@@ -743,6 +743,7 @@ const isEditMode = writable(false);
 const targetTextArea = writable(null);
 const sampleItem = writable(null);
 const isSampleLocked = writable(false);
+const isSampleVisible = writable(true);
 const allTags = writable([]);
 const tabOrder = writable([]);
 const sortedTagFiles = derived([allTags, tabOrder], ([$allTags, $tabOrder]) => {
@@ -1090,7 +1091,7 @@ function create_if_block_1$8(ctx) {
       t_1 = text("x");
       attr(button, "class", "d2ps-btn d2ps-btn--delete");
       attr(button, "title", button_title_value = /*$t*/
-      ctx[5]("common.delete"));
+      ctx[6]("common.delete"));
     },
     m(target, anchor) {
       insert(target, button, anchor);
@@ -1100,15 +1101,15 @@ function create_if_block_1$8(ctx) {
           button,
           "click",
           /*click_handler*/
-          ctx[11]
+          ctx[13]
         );
         mounted = true;
       }
     },
     p(ctx2, dirty) {
       if (dirty & /*$t*/
-      32 && button_title_value !== (button_title_value = /*$t*/
-      ctx2[5]("common.delete"))) {
+      64 && button_title_value !== (button_title_value = /*$t*/
+      ctx2[6]("common.delete"))) {
         attr(button, "title", button_title_value);
       }
     },
@@ -1133,7 +1134,7 @@ function create_if_block$a(ctx) {
       t_1 = text("📌");
       attr(button, "class", "d2ps-btn--pin");
       attr(button, "title", button_title_value = /*$t*/
-      ctx[5]("sample.pin"));
+      ctx[6]("sample.pin"));
     },
     m(target, anchor) {
       insert(target, button, anchor);
@@ -1143,15 +1144,15 @@ function create_if_block$a(ctx) {
           button,
           "click",
           /*handlePin*/
-          ctx[8]
+          ctx[10]
         );
         mounted = true;
       }
     },
     p(ctx2, dirty) {
       if (dirty & /*$t*/
-      32 && button_title_value !== (button_title_value = /*$t*/
-      ctx2[5]("sample.pin"))) {
+      64 && button_title_value !== (button_title_value = /*$t*/
+      ctx2[6]("sample.pin"))) {
         attr(button, "title", button_title_value);
       }
     },
@@ -1169,15 +1170,17 @@ function create_fragment$e(ctx) {
   let t0;
   let button;
   let t1;
+  let button_data_has_image_value;
   let t2;
   let mounted;
   let dispose;
   let if_block0 = (
     /*$isEditMode*/
-    ctx[4] && create_if_block_1$8(ctx)
+    ctx[5] && create_if_block_1$8(ctx)
   );
   let if_block1 = !/*$isEditMode*/
-  ctx[4] && /*onPin*/
+  ctx[5] && /*$isSampleVisible*/
+  ctx[7] && /*onPin*/
   ctx[3] && create_if_block$a(ctx);
   return {
     c() {
@@ -1192,6 +1195,8 @@ function create_fragment$e(ctx) {
       t2 = space();
       if (if_block1) if_block1.c();
       attr(button, "class", Constants.CSS_CLASS_BUTTON_BASE + " " + Constants.CSS_CLSSS_BUTTON_PRIMARY + " d2ps-btn d2ps-btn--tag");
+      attr(button, "data-has-image", button_data_has_image_value = /*image*/
+      ctx[4] ? "true" : "false");
       attr(span, "class", "d2ps-btn-wrapper");
     },
     m(target, anchor) {
@@ -1208,19 +1213,19 @@ function create_fragment$e(ctx) {
             button,
             "click",
             /*handleClick*/
-            ctx[6]
+            ctx[8]
           ),
           listen(
             button,
             "contextmenu",
             /*handleRightClick*/
-            ctx[7]
+            ctx[9]
           ),
           listen(
             button,
             "mouseenter",
             /*mouseenter_handler*/
-            ctx[12]
+            ctx[14]
           )
         ];
         mounted = true;
@@ -1229,7 +1234,7 @@ function create_fragment$e(ctx) {
     p(ctx2, [dirty]) {
       if (
         /*$isEditMode*/
-        ctx2[4]
+        ctx2[5]
       ) {
         if (if_block0) {
           if_block0.p(ctx2, dirty);
@@ -1248,8 +1253,14 @@ function create_fragment$e(ctx) {
         /*name*/
         ctx2[0]
       );
+      if (dirty & /*image*/
+      16 && button_data_has_image_value !== (button_data_has_image_value = /*image*/
+      ctx2[4] ? "true" : "false")) {
+        attr(button, "data-has-image", button_data_has_image_value);
+      }
       if (!/*$isEditMode*/
-      ctx2[4] && /*onPin*/
+      ctx2[5] && /*$isSampleVisible*/
+      ctx2[7] && /*onPin*/
       ctx2[3]) {
         if (if_block1) {
           if_block1.p(ctx2, dirty);
@@ -1279,14 +1290,17 @@ function create_fragment$e(ctx) {
 function instance$e($$self, $$props, $$invalidate) {
   let $isEditMode;
   let $t;
-  component_subscribe($$self, isEditMode, ($$value) => $$invalidate(4, $isEditMode = $$value));
-  component_subscribe($$self, t, ($$value) => $$invalidate(5, $t = $$value));
+  let $isSampleVisible;
+  component_subscribe($$self, isEditMode, ($$value) => $$invalidate(5, $isEditMode = $$value));
+  component_subscribe($$self, t, ($$value) => $$invalidate(6, $t = $$value));
+  component_subscribe($$self, isSampleVisible, ($$value) => $$invalidate(7, $isSampleVisible = $$value));
   let { name } = $$props;
   let { prompt } = $$props;
   let { onClickTag } = $$props;
   let { onDeleteItem = void 0 } = $$props;
   let { onHover = void 0 } = $$props;
   let { onPin = void 0 } = $$props;
+  let { image = void 0 } = $$props;
   function handleClick(e) {
     onClickTag(prompt, e.ctrlKey);
   }
@@ -1302,19 +1316,22 @@ function instance$e($$self, $$props, $$invalidate) {
   const mouseenter_handler = () => onHover == null ? void 0 : onHover();
   $$self.$$set = ($$props2) => {
     if ("name" in $$props2) $$invalidate(0, name = $$props2.name);
-    if ("prompt" in $$props2) $$invalidate(9, prompt = $$props2.prompt);
-    if ("onClickTag" in $$props2) $$invalidate(10, onClickTag = $$props2.onClickTag);
+    if ("prompt" in $$props2) $$invalidate(11, prompt = $$props2.prompt);
+    if ("onClickTag" in $$props2) $$invalidate(12, onClickTag = $$props2.onClickTag);
     if ("onDeleteItem" in $$props2) $$invalidate(1, onDeleteItem = $$props2.onDeleteItem);
     if ("onHover" in $$props2) $$invalidate(2, onHover = $$props2.onHover);
     if ("onPin" in $$props2) $$invalidate(3, onPin = $$props2.onPin);
+    if ("image" in $$props2) $$invalidate(4, image = $$props2.image);
   };
   return [
     name,
     onDeleteItem,
     onHover,
     onPin,
+    image,
     $isEditMode,
     $t,
+    $isSampleVisible,
     handleClick,
     handleRightClick,
     handlePin,
@@ -1329,11 +1346,12 @@ class TagButton extends SvelteComponent {
     super();
     init(this, options, instance$e, create_fragment$e, safe_not_equal, {
       name: 0,
-      prompt: 9,
-      onClickTag: 10,
+      prompt: 11,
+      onClickTag: 12,
       onDeleteItem: 1,
       onHover: 2,
-      onPin: 3
+      onPin: 3,
+      image: 4
     });
   }
 }
@@ -1721,6 +1739,10 @@ function create_else_block_1$2(ctx) {
         /*item*/
         ctx[0].prompt
       ),
+      image: (
+        /*item*/
+        ctx[0].image
+      ),
       onClickTag: (
         /*onClickTag*/
         ctx[1]
@@ -1757,6 +1779,9 @@ function create_else_block_1$2(ctx) {
       if (dirty & /*item*/
       1) tagbutton_changes.prompt = /*item*/
       ctx2[0].prompt;
+      if (dirty & /*item*/
+      1) tagbutton_changes.image = /*item*/
+      ctx2[0].image;
       if (dirty & /*onClickTag*/
       2) tagbutton_changes.onClickTag = /*onClickTag*/
       ctx2[1];
@@ -1801,6 +1826,10 @@ function create_if_block_1$7(ctx) {
         /*item*/
         ctx[0].prompt
       ),
+      image: (
+        /*item*/
+        ctx[0].image
+      ),
       onClickTag: (
         /*func*/
         ctx[6]
@@ -1841,6 +1870,9 @@ function create_if_block_1$7(ctx) {
       if (dirty & /*item*/
       1) tagbutton_changes.prompt = /*item*/
       ctx2[0].prompt;
+      if (dirty & /*item*/
+      1) tagbutton_changes.image = /*item*/
+      ctx2[0].image;
       if (dirty & /*onEditItem, item*/
       5) tagbutton_changes.onClickTag = /*func*/
       ctx2[6];
@@ -2531,6 +2563,10 @@ function create_else_block$4(ctx) {
         /*item*/
         ctx[19].prompt
       ),
+      image: (
+        /*item*/
+        ctx[19].image
+      ),
       onClickTag: (
         /*onClickTag*/
         ctx[0]
@@ -2556,6 +2592,9 @@ function create_else_block$4(ctx) {
       if (dirty & /*results*/
       32) tagbutton_changes.prompt = /*item*/
       ctx[19].prompt;
+      if (dirty & /*results*/
+      32) tagbutton_changes.image = /*item*/
+      ctx[19].image;
       if (dirty & /*onClickTag*/
       1) tagbutton_changes.onClickTag = /*onClickTag*/
       ctx[0];
@@ -2630,6 +2669,10 @@ function create_if_block_1$6(ctx) {
         /*item*/
         ctx[19].prompt
       ),
+      image: (
+        /*item*/
+        ctx[19].image
+      ),
       onClickTag: func,
       onDeleteItem: func_1,
       onHover: func_2,
@@ -2653,6 +2696,9 @@ function create_if_block_1$6(ctx) {
       if (dirty & /*results*/
       32) tagbutton_changes.prompt = /*item*/
       ctx[19].prompt;
+      if (dirty & /*results*/
+      32) tagbutton_changes.image = /*item*/
+      ctx[19].image;
       if (dirty & /*onEditTag, results*/
       34) tagbutton_changes.onClickTag = func;
       if (dirty & /*onDeleteItem, results*/
@@ -8351,7 +8397,7 @@ class FileEditorDialog extends SvelteComponent {
 }
 function get_each_context(ctx, list, i) {
   const child_ctx = ctx.slice();
-  child_ctx[40] = list[i];
+  child_ctx[42] = list[i];
   return child_ctx;
 }
 function create_if_block(ctx) {
@@ -8360,18 +8406,30 @@ function create_if_block(ctx) {
   let t0;
   let t1;
   let button0;
+  let t2_value = (
+    /*$t*/
+    ctx[9]("button.reload") + ""
+  );
+  let t2;
   let t3;
   let button1;
+  let t4_value = (
+    /*$t*/
+    ctx[9]("button.sample") + ""
+  );
+  let t4;
   let t5;
+  let button2;
+  let t7;
   let div2;
   let div1;
   let each_blocks = [];
   let each_1_lookup = /* @__PURE__ */ new Map();
-  let t6;
-  let searchview;
-  let t7;
-  let tabnavi;
   let t8;
+  let searchview;
+  let t9;
+  let tabnavi;
+  let t10;
   let sampleview;
   let current;
   let mounted;
@@ -8391,11 +8449,11 @@ function create_if_block(ctx) {
   );
   let each_value = ensure_array_like(
     /*$sortedTagFiles*/
-    ctx[10]
+    ctx[11]
   );
   const get_key = (ctx2) => (
     /*file*/
-    ctx2[40].fileId
+    ctx2[42].fileId
   );
   for (let i = 0; i < each_value.length; i += 1) {
     let child_ctx = get_each_context(ctx, each_value, i);
@@ -8406,19 +8464,19 @@ function create_if_block(ctx) {
     props: {
       onClickTag: (
         /*handleClickTag*/
-        ctx[13]
+        ctx[14]
       ),
       onEditTag: (
         /*handleEditTag*/
-        ctx[20]
+        ctx[21]
       ),
       onDeleteItem: (
         /*handleDeleteItem*/
-        ctx[24]
+        ctx[25]
       ),
       onSample: (
         /*func_5*/
-        ctx[32]
+        ctx[34]
       )
     }
   });
@@ -8426,14 +8484,14 @@ function create_if_block(ctx) {
     props: {
       onDeleteFile: (
         /*handleDeleteFile*/
-        ctx[26]
+        ctx[27]
       )
     }
   });
   sampleview = new SampleView({
     props: { onEdit: (
       /*handleEditFromSample*/
-      ctx[15]
+      ctx[16]
     ) }
   });
   return {
@@ -8445,27 +8503,33 @@ function create_if_block(ctx) {
       if (if_block1) if_block1.c();
       t1 = space();
       button0 = element("button");
-      button0.textContent = "🔄";
+      t2 = text(t2_value);
       t3 = space();
       button1 = element("button");
-      button1.textContent = "✖";
+      t4 = text(t4_value);
       t5 = space();
+      button2 = element("button");
+      button2.textContent = "✖";
+      t7 = space();
       div2 = element("div");
       div1 = element("div");
       for (let i = 0; i < each_blocks.length; i += 1) {
         each_blocks[i].c();
       }
-      t6 = space();
-      create_component(searchview.$$.fragment);
-      t7 = space();
-      create_component(tabnavi.$$.fragment);
       t8 = space();
+      create_component(searchview.$$.fragment);
+      t9 = space();
+      create_component(tabnavi.$$.fragment);
+      t10 = space();
       create_component(sampleview.$$.fragment);
       attr(button0, "class", Constants.CSS_CLASS_BUTTON_BASE + " " + Constants.CSS_CLSSS_BUTTON_SECONDARY + " d2ps-btn d2ps-btn--controller");
       attr(button1, "class", Constants.CSS_CLASS_BUTTON_BASE + " " + Constants.CSS_CLSSS_BUTTON_SECONDARY + " d2ps-btn d2ps-btn--controller");
+      attr(button2, "class", Constants.CSS_CLASS_BUTTON_BASE + " " + Constants.CSS_CLSSS_BUTTON_SECONDARY + " d2ps-btn d2ps-btn--controller");
       attr(div0, "class", "d2ps-controller");
       attr(div1, "class", "d2ps-tag-container");
       attr(div2, "class", "d2ps-tag-wrapper");
+      toggle_class(div2, "d2ps-tag-wrapper--no-sample", !/*$isSampleVisible*/
+      ctx[10]);
       attr(div3, "class", "d2ps");
     },
     m(target, anchor) {
@@ -8476,9 +8540,13 @@ function create_if_block(ctx) {
       if (if_block1) if_block1.m(div0, null);
       append(div0, t1);
       append(div0, button0);
+      append(button0, t2);
       append(div0, t3);
       append(div0, button1);
-      append(div3, t5);
+      append(button1, t4);
+      append(div0, t5);
+      append(div0, button2);
+      append(div3, t7);
       append(div3, div2);
       append(div2, div1);
       for (let i = 0; i < each_blocks.length; i += 1) {
@@ -8486,11 +8554,11 @@ function create_if_block(ctx) {
           each_blocks[i].m(div1, null);
         }
       }
-      append(div1, t6);
+      append(div1, t8);
       mount_component(searchview, div1, null);
-      append(div1, t7);
+      append(div1, t9);
       mount_component(tabnavi, div1, null);
-      append(div2, t8);
+      append(div2, t10);
       mount_component(sampleview, div2, null);
       current = true;
       if (!mounted) {
@@ -8499,13 +8567,19 @@ function create_if_block(ctx) {
             button0,
             "click",
             /*handleReload*/
-            ctx[11]
+            ctx[12]
           ),
           listen(
             button1,
             "click",
+            /*click_handler*/
+            ctx[28]
+          ),
+          listen(
+            button2,
+            "click",
             /*handleClose*/
-            ctx[12]
+            ctx[13]
           )
         ];
         mounted = true;
@@ -8537,15 +8611,26 @@ function create_if_block(ctx) {
         if_block1.d(1);
         if_block1 = null;
       }
+      if ((!current || dirty[0] & /*$t*/
+      512) && t2_value !== (t2_value = /*$t*/
+      ctx2[9]("button.reload") + "")) set_data(t2, t2_value);
+      if ((!current || dirty[0] & /*$t*/
+      512) && t4_value !== (t4_value = /*$t*/
+      ctx2[9]("button.sample") + "")) set_data(t4, t4_value);
       if (dirty[0] & /*$sortedTagFiles, handleClickTag, handleEditTag, handleEditCategory, handleDeleteItem, handleDeleteCategory, handleSample*/
-      53502976) {
+      107005952) {
         each_value = ensure_array_like(
           /*$sortedTagFiles*/
-          ctx2[10]
+          ctx2[11]
         );
         group_outros();
-        each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx2, each_value, each_1_lookup, div1, outro_and_destroy_block, create_each_block, t6, get_each_context);
+        each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx2, each_value, each_1_lookup, div1, outro_and_destroy_block, create_each_block, t8, get_each_context);
         check_outros();
+      }
+      if (!current || dirty[0] & /*$isSampleVisible*/
+      1024) {
+        toggle_class(div2, "d2ps-tag-wrapper--no-sample", !/*$isSampleVisible*/
+        ctx2[10]);
       }
     },
     i(local) {
@@ -8607,7 +8692,7 @@ function create_else_block(ctx) {
           button,
           "click",
           /*handleEditClick*/
-          ctx[16]
+          ctx[17]
         );
         mounted = true;
       }
@@ -8649,7 +8734,7 @@ function create_if_block_2(ctx) {
           button,
           "click",
           /*handleEditClick*/
-          ctx[16]
+          ctx[17]
         );
         mounted = true;
       }
@@ -8706,13 +8791,13 @@ function create_if_block_1(ctx) {
             button0,
             "click",
             /*handleAddTag*/
-            ctx[18]
+            ctx[19]
           ),
           listen(
             button1,
             "click",
             /*handleOpenSort*/
-            ctx[19]
+            ctx[20]
           )
         ];
         mounted = true;
@@ -8744,9 +8829,9 @@ function create_each_block(key_1, ctx) {
   function func(...args) {
     return (
       /*func*/
-      ctx[27](
+      ctx[29](
         /*file*/
-        ctx[40],
+        ctx[42],
         ...args
       )
     );
@@ -8754,9 +8839,9 @@ function create_each_block(key_1, ctx) {
   function func_1(...args) {
     return (
       /*func_1*/
-      ctx[28](
+      ctx[30](
         /*file*/
-        ctx[40],
+        ctx[42],
         ...args
       )
     );
@@ -8764,9 +8849,9 @@ function create_each_block(key_1, ctx) {
   function func_2(...args) {
     return (
       /*func_2*/
-      ctx[29](
+      ctx[31](
         /*file*/
-        ctx[40],
+        ctx[42],
         ...args
       )
     );
@@ -8774,9 +8859,9 @@ function create_each_block(key_1, ctx) {
   function func_3(...args) {
     return (
       /*func_3*/
-      ctx[30](
+      ctx[32](
         /*file*/
-        ctx[40],
+        ctx[42],
         ...args
       )
     );
@@ -8784,9 +8869,9 @@ function create_each_block(key_1, ctx) {
   function func_4(...args) {
     return (
       /*func_4*/
-      ctx[31](
+      ctx[33](
         /*file*/
-        ctx[40],
+        ctx[42],
         ...args
       )
     );
@@ -8795,11 +8880,11 @@ function create_each_block(key_1, ctx) {
     props: {
       file: (
         /*file*/
-        ctx[40]
+        ctx[42]
       ),
       onClickTag: (
         /*handleClickTag*/
-        ctx[13]
+        ctx[14]
       ),
       onEditTag: func,
       onEditCategory: func_1,
@@ -8825,18 +8910,18 @@ function create_each_block(key_1, ctx) {
       ctx = new_ctx;
       const categoryview_changes = {};
       if (dirty[0] & /*$sortedTagFiles*/
-      1024) categoryview_changes.file = /*file*/
-      ctx[40];
+      2048) categoryview_changes.file = /*file*/
+      ctx[42];
       if (dirty[0] & /*$sortedTagFiles*/
-      1024) categoryview_changes.onEditTag = func;
+      2048) categoryview_changes.onEditTag = func;
       if (dirty[0] & /*$sortedTagFiles*/
-      1024) categoryview_changes.onEditCategory = func_1;
+      2048) categoryview_changes.onEditCategory = func_1;
       if (dirty[0] & /*$sortedTagFiles*/
-      1024) categoryview_changes.onDeleteItem = func_2;
+      2048) categoryview_changes.onDeleteItem = func_2;
       if (dirty[0] & /*$sortedTagFiles*/
-      1024) categoryview_changes.onDeleteCategory = func_3;
+      2048) categoryview_changes.onDeleteCategory = func_3;
       if (dirty[0] & /*$sortedTagFiles*/
-      1024) categoryview_changes.onSample = func_4;
+      2048) categoryview_changes.onSample = func_4;
       categoryview.$set(categoryview_changes);
     },
     i(local) {
@@ -8878,62 +8963,62 @@ function create_fragment$1(ctx) {
   );
   let migrationdialog_props = {};
   migrationdialog = new MigrationDialog({ props: migrationdialog_props });
-  ctx[33](migrationdialog);
+  ctx[35](migrationdialog);
   migrationdialog.$on(
     "confirm",
     /*handleMigrationConfirm*/
-    ctx[17]
+    ctx[18]
   );
   migrationdialog.$on("cancel", cancel_handler);
   let tageditordialog_props = {};
   tageditordialog = new TagEditorDialog({ props: tageditordialog_props });
-  ctx[34](tageditordialog);
+  ctx[36](tageditordialog);
   tageditordialog.$on("done", done_handler);
   let categoryeditordialog_props = {};
   categoryeditordialog = new CategoryEditorDialog({ props: categoryeditordialog_props });
-  ctx[35](categoryeditordialog);
+  ctx[37](categoryeditordialog);
   categoryeditordialog.$on("done", done_handler_1);
   let sortdialog_props = {
     onEditCategory: (
       /*handleEditCategory*/
-      ctx[21]
+      ctx[22]
     ),
     onEditItem: (
       /*handleEditTag*/
-      ctx[20]
+      ctx[21]
     ),
     onEditFile: (
       /*handleEditFile*/
-      ctx[22]
+      ctx[23]
     ),
     onDeleteCategory: (
       /*handleDeleteCategory*/
-      ctx[25]
+      ctx[26]
     ),
     onDeleteItem: (
       /*handleDeleteItem*/
-      ctx[24]
+      ctx[25]
     ),
     onDeleteFile: (
       /*handleDeleteFile*/
-      ctx[26]
+      ctx[27]
     )
   };
   sortdialog = new SortDialog({ props: sortdialog_props });
-  ctx[36](sortdialog);
+  ctx[38](sortdialog);
   let confirmdialog_props = {};
   confirmdialog = new ConfirmDialog({ props: confirmdialog_props });
-  ctx[37](confirmdialog);
+  ctx[39](confirmdialog);
   let filedeleteconfirmdialog_props = {};
   filedeleteconfirmdialog = new FileDeleteConfirmDialog({ props: filedeleteconfirmdialog_props });
-  ctx[38](filedeleteconfirmdialog);
+  ctx[40](filedeleteconfirmdialog);
   let fileeditordialog_props = {};
   fileeditordialog = new FileEditorDialog({ props: fileeditordialog_props });
-  ctx[39](fileeditordialog);
+  ctx[41](fileeditordialog);
   fileeditordialog.$on(
     "done",
     /*handleFileRenamed*/
-    ctx[23]
+    ctx[24]
   );
   return {
     c() {
@@ -9044,19 +9129,19 @@ function create_fragment$1(ctx) {
         detach(t6);
       }
       if (if_block) if_block.d(detaching);
-      ctx[33](null);
-      destroy_component(migrationdialog, detaching);
-      ctx[34](null);
-      destroy_component(tageditordialog, detaching);
       ctx[35](null);
-      destroy_component(categoryeditordialog, detaching);
+      destroy_component(migrationdialog, detaching);
       ctx[36](null);
-      destroy_component(sortdialog, detaching);
+      destroy_component(tageditordialog, detaching);
       ctx[37](null);
-      destroy_component(confirmdialog, detaching);
+      destroy_component(categoryeditordialog, detaching);
       ctx[38](null);
-      destroy_component(filedeleteconfirmdialog, detaching);
+      destroy_component(sortdialog, detaching);
       ctx[39](null);
+      destroy_component(confirmdialog, detaching);
+      ctx[40](null);
+      destroy_component(filedeleteconfirmdialog, detaching);
+      ctx[41](null);
       destroy_component(fileeditordialog, detaching);
     }
   };
@@ -9071,11 +9156,13 @@ function instance$1($$self, $$props, $$invalidate) {
   let $isEditMode;
   let $isPanelVisible;
   let $t;
+  let $isSampleVisible;
   let $sortedTagFiles;
   component_subscribe($$self, isEditMode, ($$value) => $$invalidate(7, $isEditMode = $$value));
   component_subscribe($$self, isPanelVisible, ($$value) => $$invalidate(8, $isPanelVisible = $$value));
   component_subscribe($$self, t, ($$value) => $$invalidate(9, $t = $$value));
-  component_subscribe($$self, sortedTagFiles, ($$value) => $$invalidate(10, $sortedTagFiles = $$value));
+  component_subscribe($$self, isSampleVisible, ($$value) => $$invalidate(10, $isSampleVisible = $$value));
+  component_subscribe($$self, sortedTagFiles, ($$value) => $$invalidate(11, $sortedTagFiles = $$value));
   let migrationDialog;
   let editorDialog;
   let categoryEditorDialog;
@@ -9196,6 +9283,7 @@ function instance$1($$self, $$props, $$invalidate) {
       activeTabId.set(first);
     }
   }
+  const click_handler = () => isSampleVisible.update((v) => !v);
   const func = (file, catId, name, prompt) => handleEditTag(file.fileId, catId, name, prompt);
   const func_1 = (file, catId) => handleEditCategory(file.fileId, catId);
   const func_2 = (file, catId, name) => handleDeleteItem(file.fileId, catId, name);
@@ -9255,6 +9343,7 @@ function instance$1($$self, $$props, $$invalidate) {
     $isEditMode,
     $isPanelVisible,
     $t,
+    $isSampleVisible,
     $sortedTagFiles,
     handleReload,
     handleClose,
@@ -9272,6 +9361,7 @@ function instance$1($$self, $$props, $$invalidate) {
     handleDeleteItem,
     handleDeleteCategory,
     handleDeleteFile,
+    click_handler,
     func,
     func_1,
     func_2,

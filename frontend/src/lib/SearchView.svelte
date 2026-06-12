@@ -58,6 +58,7 @@
                 <TagButton
                     name={item.name}
                     prompt={item.prompt}
+                    image={item.image}
                     onClickTag={(_p, _c) => onEditTag(item.fileId, item.categoryId, item.name, item.prompt)}
                     onDeleteItem={(name) => onDeleteItem(item.fileId, item.categoryId, name)}
                     onHover={() => onSample(item, false)}
@@ -67,6 +68,7 @@
                 <TagButton
                     name={item.name}
                     prompt={item.prompt}
+                    image={item.image}
                     {onClickTag}
                     onHover={() => onSample(item, false)}
                     onPin={() => onSample(item, true)}

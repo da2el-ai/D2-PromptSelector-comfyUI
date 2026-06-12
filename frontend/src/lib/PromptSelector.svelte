@@ -15,7 +15,7 @@
     import FileEditorDialog from './FileEditorDialog.svelte';
     import { insertTextToTarget, apiGet, apiPost, apiPostWithBackup } from '../utils';
     import { get } from 'svelte/store';
-    import { targetTextArea, activeTabId, sampleItem, isSampleLocked } from '../stores/ui';
+    import { targetTextArea, activeTabId, sampleItem, isSampleLocked, isSampleVisible } from '../stores/ui';
     import type { SampleItem } from '../stores/ui';
     import type { TagItem } from '../types';
     import { t } from '../i18n';
@@ -206,7 +206,12 @@
             <!-- 再読み込みボタン -->
             <button
                 class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_SECONDARY} d2ps-btn d2ps-btn--controller"
-                on:click={handleReload}>🔄</button
+                on:click={handleReload}>{$t('button.reload')}</button
+            >
+            <!-- サンプルビュー表示/非表示トグル（状態の見た目は持たせない） -->
+            <button
+                class="{Constants.CSS_CLASS_BUTTON_BASE} {Constants.CSS_CLSSS_BUTTON_SECONDARY} d2ps-btn d2ps-btn--controller"
+                on:click={() => isSampleVisible.update((v) => !v)}>{$t('button.sample')}</button
             >
             <!-- 閉じるボタン -->
             <button
@@ -216,7 +221,7 @@
         </div>
 
         <!-- タグラッパー（左：ボタンエリア / 右：サンプルビュー） -->
-        <div class="d2ps-tag-wrapper">
+        <div class="d2ps-tag-wrapper" class:d2ps-tag-wrapper--no-sample={!$isSampleVisible}>
             <div class="d2ps-tag-container">
                 <!-- 全ファイル（常にDOM、display で表示切替） -->
                 {#each $sortedTagFiles as file (file.fileId)}

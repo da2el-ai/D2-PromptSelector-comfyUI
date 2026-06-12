@@ -12,6 +12,8 @@
     "button.editDone": "完成",
     "button.add": "＋ 新增",
     "button.sort": "排序",
+    "button.reload": "重新載入",
+    "button.sample": "範例",
     "tabNavi.deleteFile.title": "刪除檔案",
     "sort.title": "排序",
     "sort.aria.expand": "展開",

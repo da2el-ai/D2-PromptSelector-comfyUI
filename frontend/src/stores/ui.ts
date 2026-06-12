@@ -24,3 +24,6 @@ export const sampleItem = writable<SampleItem | null>(null);
 
 // サンプルビューを固定中か（固定中はホバーで更新しない）
 export const isSampleLocked = writable<boolean>(false);
+
+// サンプルビューを表示するか（コントローラーの Sample ボタンでトグル）
+export const isSampleVisible = writable<boolean>(true);

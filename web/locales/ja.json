@@ -12,6 +12,8 @@
     "button.editDone": "編集完了",
     "button.add": "＋ 追加",
     "button.sort": "並び順",
+    "button.reload": "再読み込み",
+    "button.sample": "サンプル",
     "tabNavi.deleteFile.title": "ファイルを削除",
     "sort.title": "並び順",
     "sort.aria.expand": "展開",

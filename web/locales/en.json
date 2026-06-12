@@ -12,6 +12,8 @@
     "button.editDone": "Done",
     "button.add": "+ Add",
     "button.sort": "Sort",
+    "button.reload": "Reload",
+    "button.sample": "Sample",
     "tabNavi.deleteFile.title": "Delete file",
     "sort.title": "Sort Order",
     "sort.aria.expand": "Expand",

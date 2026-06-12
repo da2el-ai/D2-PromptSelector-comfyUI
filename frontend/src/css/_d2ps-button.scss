@@ -31,6 +31,22 @@
     opacity: 1;
 }
 
+// 画像が登録されているプロンプトボタンの目印（左上の小さな白丸）
+.d2ps-btn--tag {
+    position: relative;
+
+    &[data-has-image="true"]::after {
+        position: absolute;
+        left: 4px;
+        top: 4px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #fff;
+        content: "";
+    }
+}
+
 // 画像サムネイル右下の削除ボタン（黒地・白文字の円形）。サンプルビュー／編集ダイアログ共通。
 // 黒い画像・白い画像どちらでも視認できるようにする。
 .d2ps-image-delete {

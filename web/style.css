@@ -27,6 +27,12 @@
   grid-template-columns: 1fr 320px;
   gap: 10px;
 }
+.d2ps-tag-wrapper.d2ps-tag-wrapper--no-sample {
+  grid-template-columns: 1fr;
+}
+.d2ps-tag-wrapper.d2ps-tag-wrapper--no-sample .d2ps-sample {
+  display: none;
+}
 
 .d2ps-tag-container {
   display: grid;
@@ -165,6 +171,20 @@
 
 .d2ps-btn-wrapper:hover .d2ps-btn--pin {
   opacity: 1;
+}
+
+.d2ps-btn--tag {
+  position: relative;
+}
+.d2ps-btn--tag[data-has-image=true]::after {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #fff;
+  content: "";
 }
 
 .d2ps-image-delete {

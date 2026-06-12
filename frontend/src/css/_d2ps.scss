@@ -29,6 +29,15 @@
     display: grid;
     grid-template-columns: 1fr 320px;
     gap: 10px;
+
+    // サンプルビュー非表示：1カラムにしてサンプルを隠す
+    &.d2ps-tag-wrapper--no-sample {
+        grid-template-columns: 1fr;
+
+        .d2ps-sample {
+            display: none;
+        }
+    }
 }
 
 .d2ps-tag-container {
