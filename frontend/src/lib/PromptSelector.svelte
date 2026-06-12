@@ -123,7 +123,7 @@
         const translate = get(t);
         const ok = await confirmDialog.open({
             title: translate('tag.delete.confirm.title'),
-            message: translate('tag.delete.confirm.message', { name: itemName }),
+            message: translate('tag.delete.confirm.message', { name: itemName }) + '\n\n' + translate('sample.deleteWarning'),
             confirmLabel: translate('common.delete'),
         });
         if (!ok) return;
@@ -141,7 +141,7 @@
         const translate = get(t);
         const ok = await confirmDialog.open({
             title: translate('category.delete.confirm.title'),
-            message: translate('category.delete.confirm.message', { name: categoryId }),
+            message: translate('category.delete.confirm.message', { name: categoryId }) + '\n\n' + translate('sample.deleteWarning'),
             confirmLabel: translate('common.delete'),
         });
         if (!ok) return;

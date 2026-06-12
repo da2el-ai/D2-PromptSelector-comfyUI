@@ -1,6 +1,6 @@
 declare var app: any;
 
-import { loadCssFile } from './utils';
+import { loadCssFile, cleanupTempImages } from './utils';
 import { targetTextArea, isPanelVisible, isEditMode, isSampleLocked, sampleItem } from './stores/ui';
 import { fetchTags } from './stores/tags';
 import PromptSelector from './lib/PromptSelector.svelte';
@@ -22,10 +22,12 @@ document.addEventListener(
 
 // パネル開閉時は常に通常モードに戻す（× 閉じる、ShowButton トグルなど全経路をカバー）
 // サンプルビューの固定・表示内容もリセットする
-isPanelVisible.subscribe(() => {
+// パネルを開いたタイミングで不要なテンポラリ画像を掃除する
+isPanelVisible.subscribe((visible) => {
   isEditMode.set(false);
   isSampleLocked.set(false);
   sampleItem.set(null);
+  if (visible) void cleanupTempImages();
 });
 
 // PromptSelector をマウント

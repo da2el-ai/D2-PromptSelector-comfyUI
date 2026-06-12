@@ -2,7 +2,15 @@
     import { createEventDispatcher, } from 'svelte';
     import { get } from 'svelte/store';
     import { Constants } from '../Constants';
-    import { apiPostWithBackup } from '../utils';
+    import {
+        apiPostWithBackup,
+        flattenLeaves,
+        imageUrl,
+        uploadImage,
+        uploadImageTemp,
+        deleteImage,
+        cleanupTempImages,
+    } from '../utils';
     import { sortedTagFiles, fetchTags } from '../stores/tags';
     import { t } from '../i18n';
 
@@ -37,6 +45,13 @@
     // エラーメッセージ
     let errorMsg = '';
     let saving = false;
+
+    // ---- 画像 ----
+    // edit: 既存項目の正式画像ファイル名 / add: temp 画像ファイル名 / 未登録: ''
+    let imageFilename = '';
+    let imageError = '';
+    let imageUploading = false;
+    let imageDragOver = false;
 
     // ---- ファイル・カテゴリ選択肢 ----
     $: files = $sortedTagFiles;
@@ -98,6 +113,10 @@
         newCategoryName = '';
         errorMsg = '';
         saving = false;
+        imageFilename = '';
+        imageError = '';
+        imageUploading = false;
+        imageDragOver = false;
         dialog.showModal();
     }
 
@@ -116,7 +135,86 @@
         newCategoryName = '';
         errorMsg = '';
         saving = false;
+        imageError = '';
+        imageUploading = false;
+        imageDragOver = false;
+        // 既存項目の画像をストアから引く（leaf-meta の image）
+        imageFilename = findItemImage(fId, catId, itemName) ?? '';
         dialog.showModal();
+    }
+
+    /** ストアから対象リーフ項目の image を取得する */
+    function findItemImage(fId: string, catId: string, itemName: string): string | undefined {
+        const f = get(sortedTagFiles).find((x) => x.fileId === fId);
+        const c = f?.categories.find((x) => x.categoryId === catId);
+        if (!c) return undefined;
+        const leaf = flattenLeaves(c.items).find((i) => i.name === itemName);
+        return leaf?.image;
+    }
+
+    // ---- 画像ドロップ／削除 ----
+    function handleImageDragOver(e: DragEvent) {
+        e.preventDefault();
+        imageDragOver = true;
+    }
+    function handleImageDragLeave() {
+        imageDragOver = false;
+    }
+
+    async function handleImageDrop(e: DragEvent) {
+        imageDragOver = false;
+        e.preventDefault();
+        const file = e.dataTransfer?.files?.[0];
+        if (!file) return;
+        imageError = '';
+        imageUploading = true;
+        try {
+            if (mode === 'add') {
+                // 新規追加：temp 保存（保存時に add_item へ渡してリネーム）
+                const res = await uploadImageTemp(file, file.name);
+                if (res.error) {
+                    imageError = res.error === 'invalid_format' ? get(t)('tag.image.invalidFormat') : get(t)('common.error.generic');
+                    return;
+                }
+                imageFilename = res.image ?? '';
+            } else {
+                // 編集：元の項目へ即時登録（差し替え）。対象は orig（YAML 上の現在値）
+                const res = await uploadImage(origFileId, origCategoryId, origName, file, file.name);
+                if (res.error) {
+                    imageError = res.error === 'invalid_format' ? get(t)('tag.image.invalidFormat') : get(t)('common.error.generic');
+                    return;
+                }
+                imageFilename = res.image ?? '';
+                await fetchTags();
+            }
+        } catch {
+            imageError = get(t)('common.error.generic');
+        } finally {
+            imageUploading = false;
+        }
+    }
+
+    async function handleImageDelete() {
+        imageError = '';
+        if (mode === 'add') {
+            // temp はローカル state をクリアするだけ（孤立 temp は後でクリーンアップ）
+            imageFilename = '';
+            return;
+        }
+        imageUploading = true;
+        try {
+            const res = await deleteImage(origFileId, origCategoryId, origName);
+            if (res.error) {
+                imageError = get(t)('common.error.generic');
+                return;
+            }
+            imageFilename = '';
+            await fetchTags();
+        } catch {
+            imageError = get(t)('common.error.generic');
+        } finally {
+            imageUploading = false;
+        }
     }
 
     // ---- カテゴリ選択クリア（ファイル変更時） ----
@@ -141,6 +239,7 @@
                     new_category: isNewCategory ? newCategoryName.trim() : null,
                     name: name.trim(),
                     prompt: prompt.trim(),
+                    image: imageFilename || null,
                 });
             } else {
                 await apiPostWithBackup('/edit_item', {
@@ -156,6 +255,8 @@
                 });
             }
             await fetchTags();
+            // 編集完了時：余った temp 画像を掃除
+            void cleanupTempImages();
             dialog.close();
             dispatch('done');
         } catch (e) {
@@ -255,6 +356,37 @@
             <span>{$t('tag.field.prompt')}</span>
             <textarea class="d2ps-dialog__input" bind:value={prompt}></textarea>
         </label>
+
+        <!-- 画像 -->
+        <div class="d2ps-dialog__label">
+            <span>{$t('tag.field.image')}</span>
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <div
+                class="d2ps-image-drop"
+                class:d2ps-image-drop--dragover={imageDragOver}
+                on:dragover={handleImageDragOver}
+                on:dragleave={handleImageDragLeave}
+                on:drop={handleImageDrop}
+            >
+                {#if imageFilename}
+                    <div class="d2ps-image-thumb">
+                        <img src={imageUrl(imageFilename)} alt={name} />
+                        <button
+                            class="d2ps-image-delete"
+                            on:click|preventDefault={handleImageDelete}
+                            title={$t('tag.image.delete')}>×</button
+                        >
+                    </div>
+                {:else}
+                    <span class="d2ps-image-drop__hint">
+                        {imageUploading ? $t('common.saving') : $t('tag.image.drop')}
+                    </span>
+                {/if}
+            </div>
+            {#if imageError}
+                <p class="d2ps-dialog__error">{imageError}</p>
+            {/if}
+        </div>
 
         <!-- エラー・重複 -->
         {#if isDuplicate}

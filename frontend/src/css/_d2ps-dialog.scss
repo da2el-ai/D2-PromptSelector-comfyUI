@@ -34,6 +34,7 @@ dialog.d2ps-dialog-root {
         margin: 0;
         line-height: 1.6;
         font-size: 0.9rem;
+        white-space: pre-line; // メッセージ中の \n を改行として表示
     }
 
     .d2ps-dialog__label {
@@ -82,5 +83,39 @@ dialog.d2ps-dialog-root {
     button:disabled {
         opacity: 0.4;
         cursor: not-allowed;
+    }
+
+    // 画像登録エリア（ドロップ）
+    .d2ps-image-drop {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100px;
+        padding: 8px;
+        border: dashed 1px var(--p-tieredmenu-separator-border-color, #555);
+        border-radius: 4px;
+    }
+
+    .d2ps-image-drop--dragover {
+        outline: 2px dashed var(--p-primary-color, #098ce9);
+        outline-offset: -2px;
+    }
+
+    .d2ps-image-drop__hint {
+        color: var(--descrip-text, #aaa);
+        font-size: 0.85rem;
+    }
+
+    .d2ps-image-thumb {
+        position: relative; // 削除ボタンの絶対配置基準
+        display: inline-flex;
+        max-width: 100%;
+
+        img {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
     }
 }

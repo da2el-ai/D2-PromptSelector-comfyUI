@@ -82,6 +82,7 @@
 }
 
 .d2ps-sample__image {
+  position: relative;
   min-height: 0;
   display: flex;
   align-items: center;
@@ -164,6 +165,29 @@
 
 .d2ps-btn-wrapper:hover .d2ps-btn--pin {
   opacity: 1;
+}
+
+.d2ps-image-delete {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  z-index: 3;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.d2ps-image-delete:hover {
+  background-color: rgba(0, 0, 0, 0.9);
 }
 
 .d2ps-btn.d2ps-btn--random {
@@ -274,6 +298,7 @@ dialog.d2ps-dialog-root .d2ps-dialog__message {
   margin: 0;
   line-height: 1.6;
   font-size: 0.9rem;
+  white-space: pre-line;
 }
 dialog.d2ps-dialog-root .d2ps-dialog__label {
   display: flex;
@@ -310,6 +335,34 @@ dialog.d2ps-dialog-root .d2ps-dialog__error {
 dialog.d2ps-dialog-root button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+dialog.d2ps-dialog-root .d2ps-image-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  padding: 8px;
+  border: dashed 1px var(--p-tieredmenu-separator-border-color, #555);
+  border-radius: 4px;
+}
+dialog.d2ps-dialog-root .d2ps-image-drop--dragover {
+  outline: 2px dashed var(--p-primary-color, #098ce9);
+  outline-offset: -2px;
+}
+dialog.d2ps-dialog-root .d2ps-image-drop__hint {
+  color: var(--descrip-text, #aaa);
+  font-size: 0.85rem;
+}
+dialog.d2ps-dialog-root .d2ps-image-thumb {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+}
+dialog.d2ps-dialog-root .d2ps-image-thumb img {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
 .d2ps-sort-tree {

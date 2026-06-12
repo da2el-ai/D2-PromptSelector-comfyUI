@@ -56,6 +56,7 @@
         <p class="d2ps-dialog__message">
             {@html $t('file.delete.confirm.typePrompt', { fileId })}
         </p>
+        <p class="d2ps-dialog__message">{$t('sample.deleteWarning')}</p>
         <input
             class="d2ps-dialog__input d2ps-dialog__input--confirm"
             type="text"

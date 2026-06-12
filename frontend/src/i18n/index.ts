@@ -48,10 +48,16 @@ function normalizeLocale(raw: string): Locale {
     return primary || FALLBACK_LOCALE;
 }
 
-/** 指定コードの辞書を fetch。失敗したら null */
+/**
+ * 指定コードの辞書を fetch。失敗したら null。
+ * `cache: 'no-cache'` で必ずサーバ再検証する。これを付けないと、ComfyUI が
+ * 拡張 JS にはバージョンクエリを付けて読み込む一方、この辞書 fetch は素の URL の
+ * ままなのでブラウザが古い JSON をキャッシュし続け、後から追加したキーが
+ * 反映されずキー名がそのまま表示されてしまう。
+ */
 async function loadDict(lang: Locale): Promise<Dict | null> {
     try {
-        const res = await fetch(`${BASE_URL}/${lang}.json`);
+        const res = await fetch(`${BASE_URL}/${lang}.json`, { cache: 'no-cache' });
         if (!res.ok) return null;
         return (await res.json()) as Dict;
     } catch {

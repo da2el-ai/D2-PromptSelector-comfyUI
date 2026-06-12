@@ -3,7 +3,7 @@
     import { sampleItem, isSampleLocked } from '../stores/ui';
     import type { SampleItem } from '../stores/ui';
     import { fetchTags } from '../stores/tags';
-    import { imageUrl, uploadImage } from '../utils';
+    import { imageUrl, uploadImage, deleteImage } from '../utils';
     import { t } from '../i18n';
 
     // 表示中の項目を編集ダイアログで開く（編集モード外でも有効）
@@ -56,6 +56,27 @@
             uploading = false;
         }
     }
+
+    // 画像削除（×）：YAML をプレーン文字列に戻し、sampleItem.image をクリア
+    async function handleDelete() {
+        const item = $sampleItem;
+        if (!item || !item.image) return;
+        errorMsg = '';
+        uploading = true;
+        try {
+            const res = await deleteImage(item.fileId, item.categoryId, item.name);
+            if (res.error) {
+                errorMsg = get(t)('common.error.generic');
+                return;
+            }
+            sampleItem.update((s) => (s ? { ...s, image: undefined } : s));
+            await fetchTags();
+        } catch {
+            errorMsg = get(t)('common.error.generic');
+        } finally {
+            uploading = false;
+        }
+    }
 </script>
 
 <div class="d2ps-sample" data-is-pinned={$isSampleLocked}>
@@ -80,6 +101,9 @@
     >
         {#if $sampleItem?.image}
             <img src={imageUrl($sampleItem.image)} alt={$sampleItem.name} />
+            <button class="d2ps-image-delete" on:click|preventDefault={handleDelete} title={$t('tag.image.delete')}
+                >×</button
+            >
         {:else}
             <div class="d2ps-sample__placeholder">
                 {#if $sampleItem}<span class="d2ps-sample__drophint">{$t('tag.image.drop')}</span>{/if}

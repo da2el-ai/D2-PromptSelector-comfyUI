@@ -41,6 +41,7 @@
 }
 
 .d2ps-sample__image {
+    position: relative; // 削除ボタンの絶対配置基準
     min-height: 0;
     display: flex;
     align-items: center;

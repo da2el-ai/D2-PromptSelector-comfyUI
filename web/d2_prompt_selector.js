@@ -77,6 +77,12 @@ function listen(node, event, handler, options) {
   node.addEventListener(event, handler, options);
   return () => node.removeEventListener(event, handler, options);
 }
+function prevent_default(fn) {
+  return function(event) {
+    event.preventDefault();
+    return fn.call(this, event);
+  };
+}
 function attr(node, attribute, value) {
   if (value == null) node.removeAttribute(attribute);
   else if (node.getAttribute(attribute) !== value) node.setAttribute(attribute, value);
@@ -608,6 +614,19 @@ async function uploadImage(file, category, name, blob, filename) {
   const res = await fetch(BASE + "/upload_image", { method: "POST", body: form });
   return res.json();
 }
+async function uploadImageTemp(blob, filename) {
+  const form = new FormData();
+  form.append("temp", "true");
+  form.append("image", blob, filename);
+  const res = await fetch(BASE + "/upload_image", { method: "POST", body: form });
+  return res.json();
+}
+async function deleteImage(file, category, name) {
+  return apiPostWithBackup("/delete_image", { file, category, name });
+}
+async function cleanupTempImages() {
+  await apiPost("/cleanup_temp_images", {});
+}
 function getWildCardPrompt(value) {
   if (Array.isArray(value)) {
     const strs2 = value.filter((v) => typeof v === "string");
@@ -774,7 +793,7 @@ function normalizeLocale(raw) {
 }
 async function loadDict(lang) {
   try {
-    const res = await fetch(`${BASE_URL}/${lang}.json`);
+    const res = await fetch(`${BASE_URL}/${lang}.json`, { cache: "no-cache" });
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -3022,7 +3041,7 @@ class SearchView extends SvelteComponent {
     });
   }
 }
-function create_if_block_6(ctx) {
+function create_if_block_6$1(ctx) {
   let button;
   let t_1;
   let button_title_value;
@@ -3065,7 +3084,7 @@ function create_if_block_6(ctx) {
     }
   };
 }
-function create_if_block_5(ctx) {
+function create_if_block_5$1(ctx) {
   let button;
   let t_1;
   let button_title_value;
@@ -3087,7 +3106,7 @@ function create_if_block_5(ctx) {
           button,
           "click",
           /*click_handler*/
-          ctx[11]
+          ctx[12]
         );
         mounted = true;
       }
@@ -3153,18 +3172,40 @@ function create_if_block_3$1(ctx) {
   let img;
   let img_src_value;
   let img_alt_value;
+  let t0;
+  let button;
+  let t1;
+  let button_title_value;
+  let mounted;
+  let dispose;
   return {
     c() {
       img = element("img");
+      t0 = space();
+      button = element("button");
+      t1 = text("×");
       if (!src_url_equal(img.src, img_src_value = imageUrl(
         /*$sampleItem*/
         ctx[4].image
       ))) attr(img, "src", img_src_value);
       attr(img, "alt", img_alt_value = /*$sampleItem*/
       ctx[4].name);
+      attr(button, "class", "d2ps-image-delete");
+      attr(button, "title", button_title_value = /*$t*/
+      ctx[6]("tag.image.delete"));
     },
     m(target, anchor) {
       insert(target, img, anchor);
+      insert(target, t0, anchor);
+      insert(target, button, anchor);
+      append(button, t1);
+      if (!mounted) {
+        dispose = listen(button, "click", prevent_default(
+          /*handleDelete*/
+          ctx[11]
+        ));
+        mounted = true;
+      }
     },
     p(ctx2, dirty) {
       if (dirty & /*$sampleItem*/
@@ -3179,11 +3220,20 @@ function create_if_block_3$1(ctx) {
       ctx2[4].name)) {
         attr(img, "alt", img_alt_value);
       }
+      if (dirty & /*$t*/
+      64 && button_title_value !== (button_title_value = /*$t*/
+      ctx2[6]("tag.image.delete"))) {
+        attr(button, "title", button_title_value);
+      }
     },
     d(detaching) {
       if (detaching) {
         detach(img);
+        detach(t0);
+        detach(button);
       }
+      mounted = false;
+      dispose();
     }
   };
 }
@@ -3340,11 +3390,11 @@ function create_fragment$9(ctx) {
   let dispose;
   let if_block0 = (
     /*$isSampleLocked*/
-    ctx[5] && create_if_block_6(ctx)
+    ctx[5] && create_if_block_6$1(ctx)
   );
   let if_block1 = (
     /*$sampleItem*/
-    ctx[4] && create_if_block_5(ctx)
+    ctx[4] && create_if_block_5$1(ctx)
   );
   function select_block_type(ctx2, dirty) {
     var _a2;
@@ -3452,7 +3502,7 @@ function create_fragment$9(ctx) {
         if (if_block0) {
           if_block0.p(ctx2, dirty);
         } else {
-          if_block0 = create_if_block_6(ctx2);
+          if_block0 = create_if_block_6$1(ctx2);
           if_block0.c();
           if_block0.m(div0, t0);
         }
@@ -3467,7 +3517,7 @@ function create_fragment$9(ctx) {
         if (if_block1) {
           if_block1.p(ctx2, dirty);
         } else {
-          if_block1 = create_if_block_5(ctx2);
+          if_block1 = create_if_block_5$1(ctx2);
           if_block1.c();
           if_block1.m(div0, null);
         }
@@ -3578,6 +3628,25 @@ function instance$9($$self, $$props, $$invalidate) {
       $$invalidate(3, uploading = false);
     }
   }
+  async function handleDelete() {
+    const item = $sampleItem;
+    if (!item || !item.image) return;
+    $$invalidate(2, errorMsg = "");
+    $$invalidate(3, uploading = true);
+    try {
+      const res = await deleteImage(item.fileId, item.categoryId, item.name);
+      if (res.error) {
+        $$invalidate(2, errorMsg = get_store_value(t)("common.error.generic"));
+        return;
+      }
+      sampleItem.update((s) => s ? { ...s, image: void 0 } : s);
+      await fetchTags();
+    } catch {
+      $$invalidate(2, errorMsg = get_store_value(t)("common.error.generic"));
+    } finally {
+      $$invalidate(3, uploading = false);
+    }
+  }
   const click_handler = () => onEdit($sampleItem);
   $$self.$$set = ($$props2) => {
     if ("onEdit" in $$props2) $$invalidate(0, onEdit = $$props2.onEdit);
@@ -3594,6 +3663,7 @@ function instance$9($$self, $$props, $$invalidate) {
     handleDragOver,
     handleDragLeave,
     handleDrop,
+    handleDelete,
     click_handler
   ];
 }
@@ -3736,22 +3806,22 @@ class MigrationDialog extends SvelteComponent {
 }
 function get_each_context$3(ctx, list, i) {
   const child_ctx = ctx.slice();
-  child_ctx[41] = list[i];
+  child_ctx[50] = list[i];
   return child_ctx;
 }
 function get_each_context_1$1(ctx, list, i) {
   const child_ctx = ctx.slice();
-  child_ctx[44] = list[i];
+  child_ctx[53] = list[i];
   return child_ctx;
 }
-function create_else_block_1(ctx) {
+function create_else_block_2(ctx) {
   let input;
   let input_placeholder_value;
   let t0;
   let button;
   let t1_value = (
     /*$t*/
-    ctx[16]("common.existing") + ""
+    ctx[20]("common.existing") + ""
   );
   let t1;
   let mounted;
@@ -3765,7 +3835,7 @@ function create_else_block_1(ctx) {
       attr(input, "class", "d2ps-dialog__input");
       attr(input, "type", "text");
       attr(input, "placeholder", input_placeholder_value = /*$t*/
-      ctx[16]("tag.field.newFileName"));
+      ctx[20]("tag.field.newFileName"));
       attr(button, "class", Constants.CSS_CLASS_BUTTON_BASE + " " + Constants.CSS_CLSSS_BUTTON_PRIMARY + " d2ps-dialog__new-btn");
     },
     m(target, anchor) {
@@ -3784,13 +3854,13 @@ function create_else_block_1(ctx) {
             input,
             "input",
             /*input_input_handler*/
-            ctx[31]
+            ctx[39]
           ),
           listen(
             button,
             "click",
             /*click_handler_1*/
-            ctx[32]
+            ctx[40]
           )
         ];
         mounted = true;
@@ -3798,8 +3868,8 @@ function create_else_block_1(ctx) {
     },
     p(ctx2, dirty) {
       if (dirty[0] & /*$t*/
-      65536 && input_placeholder_value !== (input_placeholder_value = /*$t*/
-      ctx2[16]("tag.field.newFileName"))) {
+      1048576 && input_placeholder_value !== (input_placeholder_value = /*$t*/
+      ctx2[20]("tag.field.newFileName"))) {
         attr(input, "placeholder", input_placeholder_value);
       }
       if (dirty[0] & /*newFileName*/
@@ -3812,8 +3882,8 @@ function create_else_block_1(ctx) {
         );
       }
       if (dirty[0] & /*$t*/
-      65536 && t1_value !== (t1_value = /*$t*/
-      ctx2[16]("common.existing") + "")) set_data(t1, t1_value);
+      1048576 && t1_value !== (t1_value = /*$t*/
+      ctx2[20]("common.existing") + "")) set_data(t1, t1_value);
     },
     d(detaching) {
       if (detaching) {
@@ -3826,7 +3896,7 @@ function create_else_block_1(ctx) {
     }
   };
 }
-function create_if_block_4(ctx) {
+function create_if_block_6(ctx) {
   let select;
   let each_blocks = [];
   let each_1_lookup = /* @__PURE__ */ new Map();
@@ -3834,7 +3904,7 @@ function create_if_block_4(ctx) {
   let button;
   let t1_value = (
     /*$t*/
-    ctx[16]("common.new") + ""
+    ctx[20]("common.new") + ""
   );
   let t1;
   let mounted;
@@ -3845,7 +3915,7 @@ function create_if_block_4(ctx) {
   );
   const get_key = (ctx2) => (
     /*f*/
-    ctx2[44].fileId
+    ctx2[53].fileId
   );
   for (let i = 0; i < each_value_1.length; i += 1) {
     let child_ctx = get_each_context_1$1(ctx, each_value_1, i);
@@ -3867,7 +3937,7 @@ function create_if_block_4(ctx) {
         ctx[1] === void 0
       ) add_render_callback(() => (
         /*select_change_handler*/
-        ctx[29].call(select)
+        ctx[37].call(select)
       ));
       attr(button, "class", Constants.CSS_CLASS_BUTTON_BASE + " " + Constants.CSS_CLSSS_BUTTON_PRIMARY + " d2ps-dialog__new-btn");
     },
@@ -3893,19 +3963,19 @@ function create_if_block_4(ctx) {
             select,
             "change",
             /*select_change_handler*/
-            ctx[29]
+            ctx[37]
           ),
           listen(
             select,
             "change",
             /*handleFileChange*/
-            ctx[17]
+            ctx[25]
           ),
           listen(
             button,
             "click",
             /*click_handler*/
-            ctx[30]
+            ctx[38]
           )
         ];
         mounted = true;
@@ -3929,8 +3999,8 @@ function create_if_block_4(ctx) {
         );
       }
       if (dirty[0] & /*$t*/
-      65536 && t1_value !== (t1_value = /*$t*/
-      ctx2[16]("common.new") + "")) set_data(t1, t1_value);
+      1048576 && t1_value !== (t1_value = /*$t*/
+      ctx2[20]("common.new") + "")) set_data(t1, t1_value);
     },
     d(detaching) {
       if (detaching) {
@@ -3950,7 +4020,7 @@ function create_each_block_1$1(key_1, ctx) {
   let option;
   let t_1_value = (
     /*f*/
-    ctx[44].fileId + ""
+    ctx[53].fileId + ""
   );
   let t_1;
   let option_value_value;
@@ -3961,7 +4031,7 @@ function create_each_block_1$1(key_1, ctx) {
       option = element("option");
       t_1 = text(t_1_value);
       option.__value = option_value_value = /*f*/
-      ctx[44].fileId;
+      ctx[53].fileId;
       set_input_value(option, option.__value);
       this.first = option;
     },
@@ -3973,10 +4043,10 @@ function create_each_block_1$1(key_1, ctx) {
       ctx = new_ctx;
       if (dirty[0] & /*files*/
       1024 && t_1_value !== (t_1_value = /*f*/
-      ctx[44].fileId + "")) set_data(t_1, t_1_value);
+      ctx[53].fileId + "")) set_data(t_1, t_1_value);
       if (dirty[0] & /*files*/
       1024 && option_value_value !== (option_value_value = /*f*/
-      ctx[44].fileId)) {
+      ctx[53].fileId)) {
         option.__value = option_value_value;
         set_input_value(option, option.__value);
       }
@@ -3988,7 +4058,7 @@ function create_each_block_1$1(key_1, ctx) {
     }
   };
 }
-function create_else_block$2(ctx) {
+function create_else_block_1(ctx) {
   let input;
   let input_placeholder_value;
   let t_1;
@@ -3996,7 +4066,7 @@ function create_else_block$2(ctx) {
   let mounted;
   let dispose;
   let if_block = !/*isNewFile*/
-  ctx[5] && create_if_block_3(ctx);
+  ctx[5] && create_if_block_5(ctx);
   return {
     c() {
       input = element("input");
@@ -4006,7 +4076,7 @@ function create_else_block$2(ctx) {
       attr(input, "class", "d2ps-dialog__input");
       attr(input, "type", "text");
       attr(input, "placeholder", input_placeholder_value = /*$t*/
-      ctx[16]("tag.field.newCategoryName"));
+      ctx[20]("tag.field.newCategoryName"));
     },
     m(target, anchor) {
       insert(target, input, anchor);
@@ -4023,15 +4093,15 @@ function create_else_block$2(ctx) {
           input,
           "input",
           /*input_input_handler_1*/
-          ctx[35]
+          ctx[43]
         );
         mounted = true;
       }
     },
     p(ctx2, dirty) {
       if (dirty[0] & /*$t*/
-      65536 && input_placeholder_value !== (input_placeholder_value = /*$t*/
-      ctx2[16]("tag.field.newCategoryName"))) {
+      1048576 && input_placeholder_value !== (input_placeholder_value = /*$t*/
+      ctx2[20]("tag.field.newCategoryName"))) {
         attr(input, "placeholder", input_placeholder_value);
       }
       if (dirty[0] & /*newCategoryName*/
@@ -4048,7 +4118,7 @@ function create_else_block$2(ctx) {
         if (if_block) {
           if_block.p(ctx2, dirty);
         } else {
-          if_block = create_if_block_3(ctx2);
+          if_block = create_if_block_5(ctx2);
           if_block.c();
           if_block.m(if_block_anchor.parentNode, if_block_anchor);
         }
@@ -4069,7 +4139,7 @@ function create_else_block$2(ctx) {
     }
   };
 }
-function create_if_block_2$3(ctx) {
+function create_if_block_4(ctx) {
   let select;
   let each_blocks = [];
   let each_1_lookup = /* @__PURE__ */ new Map();
@@ -4077,18 +4147,18 @@ function create_if_block_2$3(ctx) {
   let button;
   let t1_value = (
     /*$t*/
-    ctx[16]("common.new") + ""
+    ctx[20]("common.new") + ""
   );
   let t1;
   let mounted;
   let dispose;
   let each_value = ensure_array_like(
     /*categories*/
-    ctx[15]
+    ctx[19]
   );
   const get_key = (ctx2) => (
     /*cat*/
-    ctx2[41]
+    ctx2[50]
   );
   for (let i = 0; i < each_value.length; i += 1) {
     let child_ctx = get_each_context$3(ctx, each_value, i);
@@ -4110,7 +4180,7 @@ function create_if_block_2$3(ctx) {
         ctx[2] === void 0
       ) add_render_callback(() => (
         /*select_change_handler_1*/
-        ctx[33].call(select)
+        ctx[41].call(select)
       ));
       attr(button, "class", Constants.CSS_CLASS_BUTTON_BASE + " " + Constants.CSS_CLSSS_BUTTON_PRIMARY + " d2ps-dialog__new-btn");
     },
@@ -4136,13 +4206,13 @@ function create_if_block_2$3(ctx) {
             select,
             "change",
             /*select_change_handler_1*/
-            ctx[33]
+            ctx[41]
           ),
           listen(
             button,
             "click",
             /*click_handler_2*/
-            ctx[34]
+            ctx[42]
           )
         ];
         mounted = true;
@@ -4150,15 +4220,15 @@ function create_if_block_2$3(ctx) {
     },
     p(ctx2, dirty) {
       if (dirty[0] & /*categories*/
-      32768) {
+      524288) {
         each_value = ensure_array_like(
           /*categories*/
-          ctx2[15]
+          ctx2[19]
         );
         each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx2, each_value, each_1_lookup, select, destroy_block, create_each_block$3, null, get_each_context$3);
       }
       if (dirty[0] & /*categoryId, categories*/
-      32772) {
+      524292) {
         select_option(
           select,
           /*categoryId*/
@@ -4166,8 +4236,8 @@ function create_if_block_2$3(ctx) {
         );
       }
       if (dirty[0] & /*$t*/
-      65536 && t1_value !== (t1_value = /*$t*/
-      ctx2[16]("common.new") + "")) set_data(t1, t1_value);
+      1048576 && t1_value !== (t1_value = /*$t*/
+      ctx2[20]("common.new") + "")) set_data(t1, t1_value);
     },
     d(detaching) {
       if (detaching) {
@@ -4183,11 +4253,11 @@ function create_if_block_2$3(ctx) {
     }
   };
 }
-function create_if_block_3(ctx) {
+function create_if_block_5(ctx) {
   let button;
   let t_1_value = (
     /*$t*/
-    ctx[16]("common.existing") + ""
+    ctx[20]("common.existing") + ""
   );
   let t_1;
   let mounted;
@@ -4206,15 +4276,15 @@ function create_if_block_3(ctx) {
           button,
           "click",
           /*click_handler_3*/
-          ctx[36]
+          ctx[44]
         );
         mounted = true;
       }
     },
     p(ctx2, dirty) {
       if (dirty[0] & /*$t*/
-      65536 && t_1_value !== (t_1_value = /*$t*/
-      ctx2[16]("common.existing") + "")) set_data(t_1, t_1_value);
+      1048576 && t_1_value !== (t_1_value = /*$t*/
+      ctx2[20]("common.existing") + "")) set_data(t_1, t_1_value);
     },
     d(detaching) {
       if (detaching) {
@@ -4229,7 +4299,7 @@ function create_each_block$3(key_1, ctx) {
   let option;
   let t_1_value = (
     /*cat*/
-    ctx[41] + ""
+    ctx[50] + ""
   );
   let t_1;
   let option_value_value;
@@ -4240,7 +4310,7 @@ function create_each_block$3(key_1, ctx) {
       option = element("option");
       t_1 = text(t_1_value);
       option.__value = option_value_value = /*cat*/
-      ctx[41];
+      ctx[50];
       set_input_value(option, option.__value);
       this.first = option;
     },
@@ -4251,11 +4321,11 @@ function create_each_block$3(key_1, ctx) {
     p(new_ctx, dirty) {
       ctx = new_ctx;
       if (dirty[0] & /*categories*/
-      32768 && t_1_value !== (t_1_value = /*cat*/
-      ctx[41] + "")) set_data(t_1, t_1_value);
+      524288 && t_1_value !== (t_1_value = /*cat*/
+      ctx[50] + "")) set_data(t_1, t_1_value);
       if (dirty[0] & /*categories*/
-      32768 && option_value_value !== (option_value_value = /*cat*/
-      ctx[41])) {
+      524288 && option_value_value !== (option_value_value = /*cat*/
+      ctx[50])) {
         option.__value = option_value_value;
         set_input_value(option, option.__value);
       }
@@ -4267,11 +4337,161 @@ function create_each_block$3(key_1, ctx) {
     }
   };
 }
+function create_else_block$2(ctx) {
+  let span;
+  let t_1_value = (
+    /*imageUploading*/
+    (ctx[16] ? (
+      /*$t*/
+      ctx[20]("common.saving")
+    ) : (
+      /*$t*/
+      ctx[20]("tag.image.drop")
+    )) + ""
+  );
+  let t_1;
+  return {
+    c() {
+      span = element("span");
+      t_1 = text(t_1_value);
+      attr(span, "class", "d2ps-image-drop__hint");
+    },
+    m(target, anchor) {
+      insert(target, span, anchor);
+      append(span, t_1);
+    },
+    p(ctx2, dirty) {
+      if (dirty[0] & /*imageUploading, $t*/
+      1114112 && t_1_value !== (t_1_value = /*imageUploading*/
+      (ctx2[16] ? (
+        /*$t*/
+        ctx2[20]("common.saving")
+      ) : (
+        /*$t*/
+        ctx2[20]("tag.image.drop")
+      )) + "")) set_data(t_1, t_1_value);
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(span);
+      }
+    }
+  };
+}
+function create_if_block_3(ctx) {
+  let div;
+  let img;
+  let img_src_value;
+  let t0;
+  let button;
+  let t1;
+  let button_title_value;
+  let mounted;
+  let dispose;
+  return {
+    c() {
+      div = element("div");
+      img = element("img");
+      t0 = space();
+      button = element("button");
+      t1 = text("×");
+      if (!src_url_equal(img.src, img_src_value = imageUrl(
+        /*imageFilename*/
+        ctx[14]
+      ))) attr(img, "src", img_src_value);
+      attr(
+        img,
+        "alt",
+        /*name*/
+        ctx[3]
+      );
+      attr(button, "class", "d2ps-image-delete");
+      attr(button, "title", button_title_value = /*$t*/
+      ctx[20]("tag.image.delete"));
+      attr(div, "class", "d2ps-image-thumb");
+    },
+    m(target, anchor) {
+      insert(target, div, anchor);
+      append(div, img);
+      append(div, t0);
+      append(div, button);
+      append(button, t1);
+      if (!mounted) {
+        dispose = listen(button, "click", prevent_default(
+          /*handleImageDelete*/
+          ctx[24]
+        ));
+        mounted = true;
+      }
+    },
+    p(ctx2, dirty) {
+      if (dirty[0] & /*imageFilename*/
+      16384 && !src_url_equal(img.src, img_src_value = imageUrl(
+        /*imageFilename*/
+        ctx2[14]
+      ))) {
+        attr(img, "src", img_src_value);
+      }
+      if (dirty[0] & /*name*/
+      8) {
+        attr(
+          img,
+          "alt",
+          /*name*/
+          ctx2[3]
+        );
+      }
+      if (dirty[0] & /*$t*/
+      1048576 && button_title_value !== (button_title_value = /*$t*/
+      ctx2[20]("tag.image.delete"))) {
+        attr(button, "title", button_title_value);
+      }
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(div);
+      }
+      mounted = false;
+      dispose();
+    }
+  };
+}
+function create_if_block_2$3(ctx) {
+  let p;
+  let t_1;
+  return {
+    c() {
+      p = element("p");
+      t_1 = text(
+        /*imageError*/
+        ctx[15]
+      );
+      attr(p, "class", "d2ps-dialog__error");
+    },
+    m(target, anchor) {
+      insert(target, p, anchor);
+      append(p, t_1);
+    },
+    p(ctx2, dirty) {
+      if (dirty[0] & /*imageError*/
+      32768) set_data(
+        t_1,
+        /*imageError*/
+        ctx2[15]
+      );
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(p);
+      }
+    }
+  };
+}
 function create_if_block_1$4(ctx) {
   let p;
   let t_1_value = (
     /*$t*/
-    ctx[16]("tag.error.duplicate") + ""
+    ctx[20]("tag.error.duplicate") + ""
   );
   let t_1;
   return {
@@ -4286,8 +4506,8 @@ function create_if_block_1$4(ctx) {
     },
     p(ctx2, dirty) {
       if (dirty[0] & /*$t*/
-      65536 && t_1_value !== (t_1_value = /*$t*/
-      ctx2[16]("tag.error.duplicate") + "")) set_data(t_1, t_1_value);
+      1048576 && t_1_value !== (t_1_value = /*$t*/
+      ctx2[20]("tag.error.duplicate") + "")) set_data(t_1, t_1_value);
     },
     d(detaching) {
       if (detaching) {
@@ -4329,11 +4549,11 @@ function create_if_block$5(ctx) {
 }
 function create_fragment$7(ctx) {
   let dialog_1;
-  let div3;
+  let div5;
   let h3;
   let t0_value = (
     /*$t*/
-    ctx[16](
+    ctx[20](
       /*mode*/
       ctx[0] === "add" ? "tag.add.title" : "tag.edit.title"
     ) + ""
@@ -4344,7 +4564,7 @@ function create_fragment$7(ctx) {
   let span0;
   let t2_value = (
     /*$t*/
-    ctx[16]("tag.field.file") + ""
+    ctx[20]("tag.field.file") + ""
   );
   let t2;
   let t3;
@@ -4354,7 +4574,7 @@ function create_fragment$7(ctx) {
   let span1;
   let t5_value = (
     /*$t*/
-    ctx[16]("tag.field.category") + ""
+    ctx[20]("tag.field.category") + ""
   );
   let t5;
   let t6;
@@ -4364,7 +4584,7 @@ function create_fragment$7(ctx) {
   let span2;
   let t8_value = (
     /*$t*/
-    ctx[16]("tag.field.name") + ""
+    ctx[20]("tag.field.name") + ""
   );
   let t8;
   let t9;
@@ -4374,63 +4594,87 @@ function create_fragment$7(ctx) {
   let span3;
   let t11_value = (
     /*$t*/
-    ctx[16]("tag.field.prompt") + ""
+    ctx[20]("tag.field.prompt") + ""
   );
   let t11;
   let t12;
   let textarea;
   let t13;
+  let div3;
+  let span4;
+  let t14_value = (
+    /*$t*/
+    ctx[20]("tag.field.image") + ""
+  );
   let t14;
   let t15;
   let div2;
+  let t16;
+  let t17;
+  let t18;
+  let t19;
+  let div4;
   let button0;
-  let t16_value = (
+  let t20_value = (
     /*saving*/
     (ctx[9] ? (
       /*$t*/
-      ctx[16]("common.saving")
+      ctx[20]("common.saving")
     ) : (
       /*$t*/
-      ctx[16]("common.save")
+      ctx[20]("common.save")
     )) + ""
   );
-  let t16;
+  let t20;
   let button0_disabled_value;
-  let t17;
+  let t21;
   let button1;
-  let t18_value = (
+  let t22_value = (
     /*$t*/
-    ctx[16]("common.cancel") + ""
+    ctx[20]("common.cancel") + ""
   );
-  let t18;
+  let t22;
   let mounted;
   let dispose;
   function select_block_type(ctx2, dirty) {
     if (!/*isNewFile*/
-    ctx2[5]) return create_if_block_4;
-    return create_else_block_1;
+    ctx2[5]) return create_if_block_6;
+    return create_else_block_2;
   }
   let current_block_type = select_block_type(ctx);
   let if_block0 = current_block_type(ctx);
   function select_block_type_1(ctx2, dirty) {
     if (!/*isNewCategory*/
-    ctx2[7]) return create_if_block_2$3;
-    return create_else_block$2;
+    ctx2[7]) return create_if_block_4;
+    return create_else_block_1;
   }
   let current_block_type_1 = select_block_type_1(ctx);
   let if_block1 = current_block_type_1(ctx);
-  let if_block2 = (
+  function select_block_type_2(ctx2, dirty) {
+    if (
+      /*imageFilename*/
+      ctx2[14]
+    ) return create_if_block_3;
+    return create_else_block$2;
+  }
+  let current_block_type_2 = select_block_type_2(ctx);
+  let if_block2 = current_block_type_2(ctx);
+  let if_block3 = (
+    /*imageError*/
+    ctx[15] && create_if_block_2$3(ctx)
+  );
+  let if_block4 = (
     /*isDuplicate*/
     ctx[11] && create_if_block_1$4(ctx)
   );
-  let if_block3 = (
+  let if_block5 = (
     /*errorMsg*/
     ctx[13] && create_if_block$5(ctx)
   );
   return {
     c() {
       dialog_1 = element("dialog");
-      div3 = element("div");
+      div5 = element("div");
       h3 = element("h3");
       t0 = text(t0_value);
       t1 = space();
@@ -4460,16 +4704,25 @@ function create_fragment$7(ctx) {
       t12 = space();
       textarea = element("textarea");
       t13 = space();
-      if (if_block2) if_block2.c();
-      t14 = space();
-      if (if_block3) if_block3.c();
+      div3 = element("div");
+      span4 = element("span");
+      t14 = text(t14_value);
       t15 = space();
       div2 = element("div");
-      button0 = element("button");
-      t16 = text(t16_value);
+      if_block2.c();
+      t16 = space();
+      if (if_block3) if_block3.c();
       t17 = space();
+      if (if_block4) if_block4.c();
+      t18 = space();
+      if (if_block5) if_block5.c();
+      t19 = space();
+      div4 = element("div");
+      button0 = element("button");
+      t20 = text(t20_value);
+      t21 = space();
       button1 = element("button");
-      t18 = text(t18_value);
+      t22 = text(t22_value);
       attr(h3, "class", "d2ps-dialog__title");
       attr(div0, "class", "d2ps-dialog__row");
       attr(label0, "class", "d2ps-dialog__label");
@@ -4480,35 +4733,43 @@ function create_fragment$7(ctx) {
       attr(label2, "class", "d2ps-dialog__label");
       attr(textarea, "class", "d2ps-dialog__input");
       attr(label3, "class", "d2ps-dialog__label");
+      attr(div2, "class", "d2ps-image-drop");
+      toggle_class(
+        div2,
+        "d2ps-image-drop--dragover",
+        /*imageDragOver*/
+        ctx[17]
+      );
+      attr(div3, "class", "d2ps-dialog__label");
       attr(button0, "class", Constants.CSS_CLASS_BUTTON_BASE + " " + Constants.CSS_CLSSS_BUTTON_PRIMARY);
       button0.disabled = button0_disabled_value = !/*canSave*/
-      ctx[14];
+      ctx[18];
       attr(button1, "class", Constants.CSS_CLASS_BUTTON_BASE + " " + Constants.CSS_CLSSS_BUTTON_SECONDARY);
-      attr(div2, "class", "d2ps-dialog__buttons");
-      attr(div3, "class", "d2ps-dialog d2ps-dialog--editor");
+      attr(div4, "class", "d2ps-dialog__buttons");
+      attr(div5, "class", "d2ps-dialog d2ps-dialog--editor");
       attr(dialog_1, "class", "d2ps-dialog-root");
     },
     m(target, anchor) {
       insert(target, dialog_1, anchor);
-      append(dialog_1, div3);
-      append(div3, h3);
+      append(dialog_1, div5);
+      append(div5, h3);
       append(h3, t0);
-      append(div3, t1);
-      append(div3, label0);
+      append(div5, t1);
+      append(div5, label0);
       append(label0, span0);
       append(span0, t2);
       append(label0, t3);
       append(label0, div0);
       if_block0.m(div0, null);
-      append(div3, t4);
-      append(div3, label1);
+      append(div5, t4);
+      append(div5, label1);
       append(label1, span1);
       append(span1, t5);
       append(label1, t6);
       append(label1, div1);
       if_block1.m(div1, null);
-      append(div3, t7);
-      append(div3, label2);
+      append(div5, t7);
+      append(div5, label2);
       append(label2, span2);
       append(span2, t8);
       append(label2, t9);
@@ -4518,8 +4779,8 @@ function create_fragment$7(ctx) {
         /*name*/
         ctx[3]
       );
-      append(div3, t10);
-      append(div3, label3);
+      append(div5, t10);
+      append(div5, label3);
       append(label3, span3);
       append(span3, t11);
       append(label3, t12);
@@ -4529,43 +4790,70 @@ function create_fragment$7(ctx) {
         /*prompt*/
         ctx[4]
       );
-      append(div3, t13);
-      if (if_block2) if_block2.m(div3, null);
-      append(div3, t14);
-      if (if_block3) if_block3.m(div3, null);
+      append(div5, t13);
+      append(div5, div3);
+      append(div3, span4);
+      append(span4, t14);
       append(div3, t15);
       append(div3, div2);
-      append(div2, button0);
-      append(button0, t16);
-      append(div2, t17);
-      append(div2, button1);
-      append(button1, t18);
-      ctx[39](dialog_1);
+      if_block2.m(div2, null);
+      append(div3, t16);
+      if (if_block3) if_block3.m(div3, null);
+      append(div5, t17);
+      if (if_block4) if_block4.m(div5, null);
+      append(div5, t18);
+      if (if_block5) if_block5.m(div5, null);
+      append(div5, t19);
+      append(div5, div4);
+      append(div4, button0);
+      append(button0, t20);
+      append(div4, t21);
+      append(div4, button1);
+      append(button1, t22);
+      ctx[47](dialog_1);
       if (!mounted) {
         dispose = [
           listen(
             input,
             "input",
             /*input_input_handler_2*/
-            ctx[37]
+            ctx[45]
           ),
           listen(
             textarea,
             "input",
             /*textarea_input_handler*/
-            ctx[38]
+            ctx[46]
+          ),
+          listen(
+            div2,
+            "dragover",
+            /*handleImageDragOver*/
+            ctx[21]
+          ),
+          listen(
+            div2,
+            "dragleave",
+            /*handleImageDragLeave*/
+            ctx[22]
+          ),
+          listen(
+            div2,
+            "drop",
+            /*handleImageDrop*/
+            ctx[23]
           ),
           listen(
             button0,
             "click",
             /*handleSave*/
-            ctx[18]
+            ctx[26]
           ),
           listen(
             button1,
             "click",
             /*handleCancel*/
-            ctx[19]
+            ctx[27]
           )
         ];
         mounted = true;
@@ -4573,14 +4861,14 @@ function create_fragment$7(ctx) {
     },
     p(ctx2, dirty) {
       if (dirty[0] & /*$t, mode*/
-      65537 && t0_value !== (t0_value = /*$t*/
-      ctx2[16](
+      1048577 && t0_value !== (t0_value = /*$t*/
+      ctx2[20](
         /*mode*/
         ctx2[0] === "add" ? "tag.add.title" : "tag.edit.title"
       ) + "")) set_data(t0, t0_value);
       if (dirty[0] & /*$t*/
-      65536 && t2_value !== (t2_value = /*$t*/
-      ctx2[16]("tag.field.file") + "")) set_data(t2, t2_value);
+      1048576 && t2_value !== (t2_value = /*$t*/
+      ctx2[20]("tag.field.file") + "")) set_data(t2, t2_value);
       if (current_block_type === (current_block_type = select_block_type(ctx2)) && if_block0) {
         if_block0.p(ctx2, dirty);
       } else {
@@ -4592,8 +4880,8 @@ function create_fragment$7(ctx) {
         }
       }
       if (dirty[0] & /*$t*/
-      65536 && t5_value !== (t5_value = /*$t*/
-      ctx2[16]("tag.field.category") + "")) set_data(t5, t5_value);
+      1048576 && t5_value !== (t5_value = /*$t*/
+      ctx2[20]("tag.field.category") + "")) set_data(t5, t5_value);
       if (current_block_type_1 === (current_block_type_1 = select_block_type_1(ctx2)) && if_block1) {
         if_block1.p(ctx2, dirty);
       } else {
@@ -4605,8 +4893,8 @@ function create_fragment$7(ctx) {
         }
       }
       if (dirty[0] & /*$t*/
-      65536 && t8_value !== (t8_value = /*$t*/
-      ctx2[16]("tag.field.name") + "")) set_data(t8, t8_value);
+      1048576 && t8_value !== (t8_value = /*$t*/
+      ctx2[20]("tag.field.name") + "")) set_data(t8, t8_value);
       if (dirty[0] & /*name*/
       8 && input.value !== /*name*/
       ctx2[3]) {
@@ -4617,8 +4905,8 @@ function create_fragment$7(ctx) {
         );
       }
       if (dirty[0] & /*$t*/
-      65536 && t11_value !== (t11_value = /*$t*/
-      ctx2[16]("tag.field.prompt") + "")) set_data(t11, t11_value);
+      1048576 && t11_value !== (t11_value = /*$t*/
+      ctx2[20]("tag.field.prompt") + "")) set_data(t11, t11_value);
       if (dirty[0] & /*prompt*/
       16) {
         set_input_value(
@@ -4627,53 +4915,90 @@ function create_fragment$7(ctx) {
           ctx2[4]
         );
       }
-      if (
-        /*isDuplicate*/
-        ctx2[11]
-      ) {
-        if (if_block2) {
-          if_block2.p(ctx2, dirty);
-        } else {
-          if_block2 = create_if_block_1$4(ctx2);
-          if_block2.c();
-          if_block2.m(div3, t14);
-        }
-      } else if (if_block2) {
+      if (dirty[0] & /*$t*/
+      1048576 && t14_value !== (t14_value = /*$t*/
+      ctx2[20]("tag.field.image") + "")) set_data(t14, t14_value);
+      if (current_block_type_2 === (current_block_type_2 = select_block_type_2(ctx2)) && if_block2) {
+        if_block2.p(ctx2, dirty);
+      } else {
         if_block2.d(1);
-        if_block2 = null;
+        if_block2 = current_block_type_2(ctx2);
+        if (if_block2) {
+          if_block2.c();
+          if_block2.m(div2, null);
+        }
+      }
+      if (dirty[0] & /*imageDragOver*/
+      131072) {
+        toggle_class(
+          div2,
+          "d2ps-image-drop--dragover",
+          /*imageDragOver*/
+          ctx2[17]
+        );
       }
       if (
-        /*errorMsg*/
-        ctx2[13]
+        /*imageError*/
+        ctx2[15]
       ) {
         if (if_block3) {
           if_block3.p(ctx2, dirty);
         } else {
-          if_block3 = create_if_block$5(ctx2);
+          if_block3 = create_if_block_2$3(ctx2);
           if_block3.c();
-          if_block3.m(div3, t15);
+          if_block3.m(div3, null);
         }
       } else if (if_block3) {
         if_block3.d(1);
         if_block3 = null;
       }
+      if (
+        /*isDuplicate*/
+        ctx2[11]
+      ) {
+        if (if_block4) {
+          if_block4.p(ctx2, dirty);
+        } else {
+          if_block4 = create_if_block_1$4(ctx2);
+          if_block4.c();
+          if_block4.m(div5, t18);
+        }
+      } else if (if_block4) {
+        if_block4.d(1);
+        if_block4 = null;
+      }
+      if (
+        /*errorMsg*/
+        ctx2[13]
+      ) {
+        if (if_block5) {
+          if_block5.p(ctx2, dirty);
+        } else {
+          if_block5 = create_if_block$5(ctx2);
+          if_block5.c();
+          if_block5.m(div5, t19);
+        }
+      } else if (if_block5) {
+        if_block5.d(1);
+        if_block5 = null;
+      }
       if (dirty[0] & /*saving, $t*/
-      66048 && t16_value !== (t16_value = /*saving*/
+      1049088 && t20_value !== (t20_value = /*saving*/
       (ctx2[9] ? (
         /*$t*/
-        ctx2[16]("common.saving")
+        ctx2[20]("common.saving")
       ) : (
         /*$t*/
-        ctx2[16]("common.save")
-      )) + "")) set_data(t16, t16_value);
+        ctx2[20]("common.save")
+      )) + "")) set_data(t20, t20_value);
       if (dirty[0] & /*canSave*/
-      16384 && button0_disabled_value !== (button0_disabled_value = !/*canSave*/
-      ctx2[14])) {
+      262144 && button0_disabled_value !== (button0_disabled_value = !/*canSave*/
+      ctx2[18])) {
         button0.disabled = button0_disabled_value;
       }
       if (dirty[0] & /*$t*/
-      65536 && t18_value !== (t18_value = /*$t*/
-      ctx2[16]("common.cancel") + "")) set_data(t18, t18_value);
+      1048576 && t22_value !== (t22_value = /*$t*/
+      ctx2[20]("common.cancel") + "")) set_data(t22, t22_value);
     },
     i: noop,
     o: noop,
@@ -4683,9 +5008,11 @@ function create_fragment$7(ctx) {
       }
       if_block0.d();
       if_block1.d();
-      if (if_block2) if_block2.d();
+      if_block2.d();
       if (if_block3) if_block3.d();
-      ctx[39](null);
+      if (if_block4) if_block4.d();
+      if (if_block5) if_block5.d();
+      ctx[47](null);
       mounted = false;
       run_all(dispose);
     }
@@ -4701,8 +5028,8 @@ function instance$7($$self, $$props, $$invalidate) {
   let canSave;
   let $sortedTagFiles;
   let $t;
-  component_subscribe($$self, sortedTagFiles, ($$value) => $$invalidate(28, $sortedTagFiles = $$value));
-  component_subscribe($$self, t, ($$value) => $$invalidate(16, $t = $$value));
+  component_subscribe($$self, sortedTagFiles, ($$value) => $$invalidate(36, $sortedTagFiles = $$value));
+  component_subscribe($$self, t, ($$value) => $$invalidate(20, $t = $$value));
   const dispatch = createEventDispatcher();
   let mode = "add";
   let dialog;
@@ -4719,6 +5046,10 @@ function instance$7($$self, $$props, $$invalidate) {
   let newCategoryName = "";
   let errorMsg = "";
   let saving = false;
+  let imageFilename = "";
+  let imageError = "";
+  let imageUploading = false;
+  let imageDragOver = false;
   function openAdd() {
     $$invalidate(0, mode = "add");
     const first = files[0];
@@ -4726,15 +5057,19 @@ function instance$7($$self, $$props, $$invalidate) {
     $$invalidate(2, categoryId = first && first.categories[0] ? first.categories[0].categoryId : "");
     $$invalidate(3, name = "");
     $$invalidate(4, prompt = "");
-    $$invalidate(22, origFileId = "");
-    $$invalidate(23, origCategoryId = "");
-    $$invalidate(24, origName = "");
+    $$invalidate(30, origFileId = "");
+    $$invalidate(31, origCategoryId = "");
+    $$invalidate(32, origName = "");
     $$invalidate(5, isNewFile = false);
     $$invalidate(6, newFileName = "");
     $$invalidate(7, isNewCategory = false);
     $$invalidate(8, newCategoryName = "");
     $$invalidate(13, errorMsg = "");
     $$invalidate(9, saving = false);
+    $$invalidate(14, imageFilename = "");
+    $$invalidate(15, imageError = "");
+    $$invalidate(16, imageUploading = false);
+    $$invalidate(17, imageDragOver = false);
     dialog.showModal();
   }
   function openEdit(fId, catId, itemName, itemPrompt) {
@@ -4743,16 +5078,86 @@ function instance$7($$self, $$props, $$invalidate) {
     $$invalidate(2, categoryId = catId);
     $$invalidate(3, name = itemName);
     $$invalidate(4, prompt = itemPrompt);
-    $$invalidate(22, origFileId = fId);
-    $$invalidate(23, origCategoryId = catId);
-    $$invalidate(24, origName = itemName);
+    $$invalidate(30, origFileId = fId);
+    $$invalidate(31, origCategoryId = catId);
+    $$invalidate(32, origName = itemName);
     $$invalidate(5, isNewFile = false);
     $$invalidate(6, newFileName = "");
     $$invalidate(7, isNewCategory = false);
     $$invalidate(8, newCategoryName = "");
     $$invalidate(13, errorMsg = "");
     $$invalidate(9, saving = false);
+    $$invalidate(15, imageError = "");
+    $$invalidate(16, imageUploading = false);
+    $$invalidate(17, imageDragOver = false);
+    $$invalidate(14, imageFilename = findItemImage(fId, catId, itemName) ?? "");
     dialog.showModal();
+  }
+  function findItemImage(fId, catId, itemName) {
+    const f = get_store_value(sortedTagFiles).find((x) => x.fileId === fId);
+    const c = f == null ? void 0 : f.categories.find((x) => x.categoryId === catId);
+    if (!c) return void 0;
+    const leaf = flattenLeaves(c.items).find((i) => i.name === itemName);
+    return leaf == null ? void 0 : leaf.image;
+  }
+  function handleImageDragOver(e) {
+    e.preventDefault();
+    $$invalidate(17, imageDragOver = true);
+  }
+  function handleImageDragLeave() {
+    $$invalidate(17, imageDragOver = false);
+  }
+  async function handleImageDrop(e) {
+    var _a2, _b;
+    $$invalidate(17, imageDragOver = false);
+    e.preventDefault();
+    const file = (_b = (_a2 = e.dataTransfer) == null ? void 0 : _a2.files) == null ? void 0 : _b[0];
+    if (!file) return;
+    $$invalidate(15, imageError = "");
+    $$invalidate(16, imageUploading = true);
+    try {
+      if (mode === "add") {
+        const res = await uploadImageTemp(file, file.name);
+        if (res.error) {
+          $$invalidate(15, imageError = res.error === "invalid_format" ? get_store_value(t)("tag.image.invalidFormat") : get_store_value(t)("common.error.generic"));
+          return;
+        }
+        $$invalidate(14, imageFilename = res.image ?? "");
+      } else {
+        const res = await uploadImage(origFileId, origCategoryId, origName, file, file.name);
+        if (res.error) {
+          $$invalidate(15, imageError = res.error === "invalid_format" ? get_store_value(t)("tag.image.invalidFormat") : get_store_value(t)("common.error.generic"));
+          return;
+        }
+        $$invalidate(14, imageFilename = res.image ?? "");
+        await fetchTags();
+      }
+    } catch {
+      $$invalidate(15, imageError = get_store_value(t)("common.error.generic"));
+    } finally {
+      $$invalidate(16, imageUploading = false);
+    }
+  }
+  async function handleImageDelete() {
+    $$invalidate(15, imageError = "");
+    if (mode === "add") {
+      $$invalidate(14, imageFilename = "");
+      return;
+    }
+    $$invalidate(16, imageUploading = true);
+    try {
+      const res = await deleteImage(origFileId, origCategoryId, origName);
+      if (res.error) {
+        $$invalidate(15, imageError = get_store_value(t)("common.error.generic"));
+        return;
+      }
+      $$invalidate(14, imageFilename = "");
+      await fetchTags();
+    } catch {
+      $$invalidate(15, imageError = get_store_value(t)("common.error.generic"));
+    } finally {
+      $$invalidate(16, imageUploading = false);
+    }
   }
   function handleFileChange() {
     $$invalidate(7, isNewCategory = false);
@@ -4772,7 +5177,8 @@ function instance$7($$self, $$props, $$invalidate) {
           category: isNewCategory ? "__new__" : categoryId,
           new_category: isNewCategory ? newCategoryName.trim() : null,
           name: name.trim(),
-          prompt: prompt.trim()
+          prompt: prompt.trim(),
+          image: imageFilename || null
         });
       } else {
         await apiPostWithBackup("/edit_item", {
@@ -4788,6 +5194,7 @@ function instance$7($$self, $$props, $$invalidate) {
         });
       }
       await fetchTags();
+      void cleanupTempImages();
       dialog.close();
       dispatch("done");
     } catch (e) {
@@ -4802,7 +5209,7 @@ function instance$7($$self, $$props, $$invalidate) {
   function select_change_handler() {
     fileId = select_value(this);
     $$invalidate(1, fileId);
-    $$invalidate(10, files), $$invalidate(28, $sortedTagFiles);
+    $$invalidate(10, files), $$invalidate(36, $sortedTagFiles);
   }
   const click_handler = () => {
     $$invalidate(5, isNewFile = true);
@@ -4818,7 +5225,7 @@ function instance$7($$self, $$props, $$invalidate) {
   function select_change_handler_1() {
     categoryId = select_value(this);
     $$invalidate(2, categoryId);
-    $$invalidate(15, categories), $$invalidate(27, selectedFile), $$invalidate(10, files), $$invalidate(1, fileId), $$invalidate(28, $sortedTagFiles);
+    $$invalidate(19, categories), $$invalidate(35, selectedFile), $$invalidate(10, files), $$invalidate(1, fileId), $$invalidate(36, $sortedTagFiles);
   }
   const click_handler_2 = () => {
     $$invalidate(7, isNewCategory = true);
@@ -4846,17 +5253,17 @@ function instance$7($$self, $$props, $$invalidate) {
     });
   }
   $$self.$$.update = () => {
-    if ($$self.$$.dirty[0] & /*$sortedTagFiles*/
-    268435456) {
+    if ($$self.$$.dirty[1] & /*$sortedTagFiles*/
+    32) {
       $$invalidate(10, files = $sortedTagFiles);
     }
     if ($$self.$$.dirty[0] & /*files, fileId*/
     1026) {
-      $$invalidate(27, selectedFile = files.find((f) => f.fileId === fileId));
+      $$invalidate(35, selectedFile = files.find((f) => f.fileId === fileId));
     }
-    if ($$self.$$.dirty[0] & /*selectedFile*/
-    134217728) {
-      $$invalidate(15, categories = selectedFile ? selectedFile.categories.map((c) => c.categoryId) : []);
+    if ($$self.$$.dirty[1] & /*selectedFile*/
+    16) {
+      $$invalidate(19, categories = selectedFile ? selectedFile.categories.map((c) => c.categoryId) : []);
     }
     if ($$self.$$.dirty[0] & /*isNewFile, isNewCategory*/
     160) {
@@ -4864,8 +5271,9 @@ function instance$7($$self, $$props, $$invalidate) {
         $$invalidate(7, isNewCategory = true);
       }
     }
-    if ($$self.$$.dirty[0] & /*isNewFile, name, isNewCategory, newCategoryName, categoryId, files, fileId, mode, origFileId, origCategoryId, origName*/
-    29361583) {
+    if ($$self.$$.dirty[0] & /*isNewFile, name, isNewCategory, newCategoryName, categoryId, files, fileId, mode, origFileId*/
+    1073743279 | $$self.$$.dirty[1] & /*origCategoryId, origName*/
+    3) {
       $$invalidate(11, isDuplicate = (() => {
         if (isNewFile) return false;
         if (!name.trim()) return false;
@@ -4883,15 +5291,16 @@ function instance$7($$self, $$props, $$invalidate) {
     }
     if ($$self.$$.dirty[0] & /*isNewCategory, newCategoryName, categoryId*/
     388) {
-      $$invalidate(25, effectiveCategoryId = isNewCategory ? newCategoryName.trim() : categoryId);
+      $$invalidate(33, effectiveCategoryId = isNewCategory ? newCategoryName.trim() : categoryId);
     }
     if ($$self.$$.dirty[0] & /*isNewFile, newFileName, fileId*/
     98) {
-      $$invalidate(26, effectiveFileId = isNewFile ? newFileName.trim() : fileId);
+      $$invalidate(34, effectiveFileId = isNewFile ? newFileName.trim() : fileId);
     }
-    if ($$self.$$.dirty[0] & /*name, prompt, effectiveFileId, effectiveCategoryId, isDuplicate, saving*/
-    100665880) {
-      $$invalidate(14, canSave = name.trim() !== "" && prompt.trim() !== "" && effectiveFileId !== "" && effectiveCategoryId !== "" && !isDuplicate && !saving);
+    if ($$self.$$.dirty[0] & /*name, prompt, isDuplicate, saving*/
+    2584 | $$self.$$.dirty[1] & /*effectiveFileId, effectiveCategoryId*/
+    12) {
+      $$invalidate(18, canSave = name.trim() !== "" && prompt.trim() !== "" && effectiveFileId !== "" && effectiveCategoryId !== "" && !isDuplicate && !saving);
     }
   };
   return [
@@ -4909,9 +5318,17 @@ function instance$7($$self, $$props, $$invalidate) {
     isDuplicate,
     dialog,
     errorMsg,
+    imageFilename,
+    imageError,
+    imageUploading,
+    imageDragOver,
     canSave,
     categories,
     $t,
+    handleImageDragOver,
+    handleImageDragLeave,
+    handleImageDrop,
+    handleImageDelete,
     handleFileChange,
     handleSave,
     handleCancel,
@@ -4940,13 +5357,13 @@ function instance$7($$self, $$props, $$invalidate) {
 class TagEditorDialog extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$7, create_fragment$7, safe_not_equal, { openAdd: 20, openEdit: 21 }, null, [-1, -1]);
+    init(this, options, instance$7, create_fragment$7, safe_not_equal, { openAdd: 28, openEdit: 29 }, null, [-1, -1]);
   }
   get openAdd() {
-    return this.$$.ctx[20];
+    return this.$$.ctx[28];
   }
   get openEdit() {
-    return this.$$.ctx[21];
+    return this.$$.ctx[29];
   }
 }
 function get_each_context$2(ctx, list, i) {
@@ -7232,23 +7649,30 @@ function create_fragment$3(ctx) {
     ) }) + ""
   );
   let t3;
-  let input;
+  let p2;
+  let t4_value = (
+    /*$t*/
+    ctx[6]("sample.deleteWarning") + ""
+  );
   let t4;
+  let t5;
+  let input;
+  let t6;
   let div0;
   let button0;
-  let t5_value = (
+  let t7_value = (
     /*$t*/
     ctx[6]("common.delete") + ""
   );
-  let t5;
+  let t7;
   let button0_disabled_value;
-  let t6;
+  let t8;
   let button1;
-  let t7_value = (
+  let t9_value = (
     /*$t*/
     ctx[6]("common.cancel") + ""
   );
-  let t7;
+  let t9;
   let mounted;
   let dispose;
   return {
@@ -7262,17 +7686,21 @@ function create_fragment$3(ctx) {
       t2 = space();
       p1 = element("p");
       t3 = space();
+      p2 = element("p");
+      t4 = text(t4_value);
+      t5 = space();
       input = element("input");
-      t4 = space();
+      t6 = space();
       div0 = element("div");
       button0 = element("button");
-      t5 = text(t5_value);
-      t6 = space();
-      button1 = element("button");
       t7 = text(t7_value);
+      t8 = space();
+      button1 = element("button");
+      t9 = text(t9_value);
       attr(h3, "class", "d2ps-dialog__title");
       attr(p0, "class", "d2ps-dialog__message");
       attr(p1, "class", "d2ps-dialog__message");
+      attr(p2, "class", "d2ps-dialog__message");
       attr(input, "class", "d2ps-dialog__input d2ps-dialog__input--confirm");
       attr(input, "type", "text");
       attr(
@@ -7302,19 +7730,22 @@ function create_fragment$3(ctx) {
       append(div1, p1);
       p1.innerHTML = raw1_value;
       append(div1, t3);
+      append(div1, p2);
+      append(p2, t4);
+      append(div1, t5);
       append(div1, input);
       set_input_value(
         input,
         /*typedName*/
         ctx[1]
       );
-      append(div1, t4);
+      append(div1, t6);
       append(div1, div0);
       append(div0, button0);
-      append(button0, t5);
-      append(div0, t6);
+      append(button0, t7);
+      append(div0, t8);
       append(div0, button1);
-      append(button1, t7);
+      append(button1, t9);
       ctx[11](dialog_1);
       if (!mounted) {
         dispose = [
@@ -7366,6 +7797,9 @@ function create_fragment$3(ctx) {
         /*fileId*/
         ctx2[0]
       ) }) + "")) p1.innerHTML = raw1_value;
+      if (dirty & /*$t*/
+      64 && t4_value !== (t4_value = /*$t*/
+      ctx2[6]("sample.deleteWarning") + "")) set_data(t4, t4_value);
       if (dirty & /*fileId*/
       1) {
         attr(
@@ -7385,16 +7819,16 @@ function create_fragment$3(ctx) {
         );
       }
       if (dirty & /*$t*/
-      64 && t5_value !== (t5_value = /*$t*/
-      ctx2[6]("common.delete") + "")) set_data(t5, t5_value);
+      64 && t7_value !== (t7_value = /*$t*/
+      ctx2[6]("common.delete") + "")) set_data(t7, t7_value);
       if (dirty & /*canDelete*/
       32 && button0_disabled_value !== (button0_disabled_value = !/*canDelete*/
       ctx2[5])) {
         button0.disabled = button0_disabled_value;
       }
       if (dirty & /*$t*/
-      64 && t7_value !== (t7_value = /*$t*/
-      ctx2[6]("common.cancel") + "")) set_data(t7, t7_value);
+      64 && t9_value !== (t9_value = /*$t*/
+      ctx2[6]("common.cancel") + "")) set_data(t9, t9_value);
     },
     i: noop,
     o: noop,
@@ -8719,7 +9153,7 @@ function instance$1($$self, $$props, $$invalidate) {
     const translate = get_store_value(t);
     const ok = await confirmDialog.open({
       title: translate("tag.delete.confirm.title"),
-      message: translate("tag.delete.confirm.message", { name: itemName }),
+      message: translate("tag.delete.confirm.message", { name: itemName }) + "\n\n" + translate("sample.deleteWarning"),
       confirmLabel: translate("common.delete")
     });
     if (!ok) return;
@@ -8735,7 +9169,7 @@ function instance$1($$self, $$props, $$invalidate) {
     const translate = get_store_value(t);
     const ok = await confirmDialog.open({
       title: translate("category.delete.confirm.title"),
-      message: translate("category.delete.confirm.message", { name: categoryId }),
+      message: translate("category.delete.confirm.message", { name: categoryId }) + "\n\n" + translate("sample.deleteWarning"),
       confirmLabel: translate("common.delete")
     });
     if (!ok) return;
@@ -9024,10 +9458,11 @@ document.addEventListener(
   },
   true
 );
-isPanelVisible.subscribe(() => {
+isPanelVisible.subscribe((visible) => {
   isEditMode.set(false);
   isSampleLocked.set(false);
   sampleItem.set(null);
+  if (visible) void cleanupTempImages();
 });
 const selectorContainer = document.createElement("div");
 document.body.appendChild(selectorContainer);
